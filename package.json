@@ -36,7 +36,7 @@
     "@adonisjs/assembler": "^7.8.2",
     "@adonisjs/tsconfig": "^1.4.0",
     "@commitlint/cli": "^19.5.0",
-    "@commitlint/config-conventional": "^19.5.0",
+    "@commitlint/config-conventional": "^19.6.0",
     "@japa/api-client": "^2.0.3",
     "@japa/assert": "^3.0.0",
     "@japa/plugin-adonisjs": "^3.0.1",
