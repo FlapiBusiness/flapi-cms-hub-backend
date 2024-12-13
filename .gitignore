@@ -17,3 +17,7 @@ yarn-error.log
 
 # Platform specific
 .DS_Store
+
+# Swagger
+swagger.json
+swagger.yml
