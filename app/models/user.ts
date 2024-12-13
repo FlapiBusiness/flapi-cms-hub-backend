@@ -21,37 +21,37 @@ export default class User extends compose(BaseModel, AuthFinder) {
    * ID de l'utilisateur
    */
   @column({ isPrimary: true })
-  public declare id: number
+  declare public id: number
 
   /**
    * Nom complet de l'utilisateur
    */
   @column()
-  public declare fullName: string | null
+  declare public fullName: string | null
 
   /**
    * Adresse e-mail de l'utilisateur
    */
   @column()
-  public declare email: string
+  declare public email: string
 
   /**
    * Mot de passe (non sérialisé)
    */
   @column({ serializeAs: null })
-  public declare password: string
+  declare public password: string
 
   /**
    * Date de création
    */
   @column.dateTime({ autoCreate: true })
-  public declare createdAt: DateTime
+  declare public createdAt: DateTime
 
   /**
    * Date de mise à jour
    */
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  public declare updatedAt: DateTime | null
+  declare public updatedAt: DateTime | null
 
   /**
    * Tokens d'accès pour l'utilisateur
