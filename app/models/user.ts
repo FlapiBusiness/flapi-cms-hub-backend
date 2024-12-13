@@ -1,60 +1,115 @@
-import { DateTime } from 'luxon'
 import hash from '@adonisjs/core/services/hash'
-import { compose } from '@adonisjs/core/helpers'
-import { BaseModel, column } from '@adonisjs/lucid/orm'
-import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
+import { DateTime } from 'luxon'
+import { BaseModel, beforeSave, belongsTo, column } from '@adonisjs/lucid/orm'
+import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import UserRole from '#models/user_role'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 
 /**
- * Fonction de mixin pour la gestion de l'authentification.
+ * The User model represents a user of the application.
  */
-const AuthFinder: ReturnType<typeof withAuthFinder> = withAuthFinder(() => hash.use('scrypt'), {
-  uids: ['email'],
-  passwordColumnName: 'password',
-})
-
-/**
- * Modèle représentant les utilisateurs de l'application.
- */
-export default class User extends compose(BaseModel, AuthFinder) {
+export default class User extends BaseModel {
   /**
-   * ID de l'utilisateur
+   * The unique identifier for the user.
    */
   @column({ isPrimary: true })
   declare public id: number
 
   /**
-   * Nom complet de l'utilisateur
+   * The role ID associated with the user.
    */
   @column()
-  declare public fullName: string | null
+  declare public roleId: number
 
   /**
-   * Adresse e-mail de l'utilisateur
+   * The relationship to the Role model.
+   */
+  @belongsTo(() => UserRole)
+  declare public role: BelongsTo<typeof UserRole>
+
+  /**
+   * The last name of the user.
+   */
+  @column()
+  declare public lastname: string | null
+
+  /**
+   * The first name of the user.
+   */
+  @column()
+  declare public firstname: string | null
+
+  /**
+   * The email address of the user. Must be unique.
    */
   @column()
   declare public email: string
 
   /**
-   * Mot de passe (non sérialisé)
+   * The hashed password of the user.
+   * This field is hidden in serialized responses.
    */
   @column({ serializeAs: null })
   declare public password: string
 
   /**
-   * Date de création
+   * The currency code (e.g., USD, EUR) associated with the user.
+   */
+  @column()
+  declare public currencyCode: string | null
+
+  /**
+   * The user's IP address.
+   */
+  @column()
+  declare public ipAddress: string | null
+
+  /**
+   * The region of the IP address associated with the user.
+   */
+  @column()
+  declare public ipRegion: string | null
+
+  /**
+   * Whether the user account is active.
+   */
+  @column()
+  declare public isActive: boolean
+
+  /**
+   * The 6-digit active code for the user.
+   */
+  @column()
+  declare public activeCode: number
+
+  /**
+   * The Stripe customer ID associated with the user.
+   */
+  @column()
+  declare public stripeCustomerId: number | null
+
+  /**
+   * The timestamp when the user was created.
    */
   @column.dateTime({ autoCreate: true })
   declare public createdAt: DateTime
 
   /**
-   * Date de mise à jour
+   * The timestamp when the user was last updated.
    */
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare public updatedAt: DateTime | null
+  declare public updatedAt: DateTime
+
+  public static accessTokens = DbAccessTokensProvider.forModel(User)
 
   /**
-   * Tokens d'accès pour l'utilisateur
+   * Hook to hash the password before saving it to the database.
+   * @param {User} user - The user instance to hash the password for.
    */
-  public static accessTokens = DbAccessTokensProvider.forModel(User)
+  @beforeSave()
+  public static async hashPassword(user: User): Promise<void> {
+    if (user.$dirty.password) {
+      user.password = await hash.make(user.password)
+    }
+  }
 }
