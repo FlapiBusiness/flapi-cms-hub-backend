@@ -33,7 +33,7 @@
     "@vinejs/vine": "^3.0.0",
     "adonis-autoswagger": "^3.64.0",
     "luxon": "^3.5.0",
-    "mysql2": "^3.11.4",
+    "mysql2": "^3.11.5",
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
