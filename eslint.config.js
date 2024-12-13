@@ -136,6 +136,27 @@ const mainConfig = {
         contexts: ['TSTypeAliasDeclaration', 'TSInterfaceDeclaration'],
       },
     ],
+
+    // Autorise les tags spécifiques pour le package adonis-autoswagger
+    'jsdoc/check-tag-names': [
+      'warn',
+      {
+        definedTags: [
+          'tag',
+          'summary',
+          'description',
+          'operationId',
+          'responseBody',
+          'responseHeader',
+          'paramType',
+          'requestBody',
+          'requestFormDataBody',
+          'paramPath',
+          'paramQuery',
+          'paramHeader',
+        ],
+      },
+    ],
   },
   settings: {
     'import/resolver': {
