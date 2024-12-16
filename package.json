@@ -39,7 +39,7 @@
   "devDependencies": {
     "@adonisjs/assembler": "^7.8.2",
     "@adonisjs/tsconfig": "^1.4.0",
-    "@commitlint/cli": "^19.6.0",
+    "@commitlint/cli": "^19.6.1",
     "@commitlint/config-conventional": "^19.6.0",
     "@japa/api-client": "^2.0.4",
     "@japa/assert": "^3.0.0",
