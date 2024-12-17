@@ -17,3 +17,9 @@ router.get('/', async (): Promise<{ hello: string }> => {
     hello: 'world',
   }
 })
+
+/**
+ * Auth routes
+ */
+const AuthController = () => import('#controllers/http/auth_controller')
+router.post('/signup', [AuthController, 'signUp'])
