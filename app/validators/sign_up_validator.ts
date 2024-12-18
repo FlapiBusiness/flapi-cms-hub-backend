@@ -4,7 +4,7 @@ import type UserRole from '#models/user_role'
 import type User from '#models/user'
 
 /**
- * Type manuel basé sur le schéma
+ * Type manuel basé sur le schéma pour typé le validateur.
  */
 export type SignUpPayload = {
   role_id: number

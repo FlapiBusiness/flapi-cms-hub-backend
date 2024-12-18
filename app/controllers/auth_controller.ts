@@ -5,6 +5,9 @@ import { signUpValidator } from '#validators/signup_validator'
 import type User from '#models/user'
 import BadRequestException from '#exceptions/bad_request_exception'
 import logger from '@adonisjs/core/services/logger'
+import type { LoginPayload } from '#validators/login_validator'
+import { loginValidator } from '#validators/login_validator'
+import type { AccessToken } from '@adonisjs/auth/access_tokens'
 
 /**
  * Controller to handle user authentication operations
@@ -37,6 +40,31 @@ export default class AuthController {
     } catch (error: any) {
       logger.error(error)
       throw new BadRequestException()
+    }
+  }
+
+  /**
+   * Handle user login
+   * @param {HttpContext} ctx - The HTTP context containing the request and response objects
+   * @param {HttpContext['request']} ctx.request - The HTTP request object
+   * @param {HttpContext['response']} ctx.response - The HTTP response object
+   * @returns {Promise<void>} - A promise that resolves with no return value
+   */
+  public async signIn({
+    request,
+    response,
+    auth,
+  }: HttpContext): Promise<(User & { currentAccessToken: AccessToken }) | void> {
+    try {
+      const payload: LoginPayload = await loginValidator.validate(request.all())
+      await AuthService.signIn(payload)
+      return auth.use('api').authenticate()
+    } catch (error) {
+      logger.error(error)
+      return response.unauthorized({
+        message: 'Login failed',
+        error: error.message,
+      })
     }
   }
 }
