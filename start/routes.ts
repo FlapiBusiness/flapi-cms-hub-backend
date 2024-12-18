@@ -7,6 +7,7 @@ import './routes/aws.ts'
 import './routes/swagger.ts'
 import './routes/health.ts'
 import './routes/client.ts'
+import './routes/auth.ts'
 
 /**
  * Cette route est utilisée pour tester le fonctionnement de base de l'application,
@@ -17,9 +18,3 @@ router.get('/', async (): Promise<{ hello: string }> => {
     hello: 'world',
   }
 })
-
-/**
- * Auth routes
- */
-const AuthController = () => import('#controllers/http/auth_controller')
-router.post('/signup', [AuthController, 'signUp'])
