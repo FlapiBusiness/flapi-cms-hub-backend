@@ -1,0 +1,44 @@
+<mjml>
+  <mj-body background-color="#111827">
+    <mj-section background-color="#1F2937" padding-bottom="20px">
+      <mj-column>
+        <mj-image width="120px;" src="https://hub.flapi.org/images/logo.png" align="center" padding="10px 0">
+        </mj-image>
+        <mj-text align="center" color="#ffffff" font-size="26px" font-weight="bold" padding="20px">
+          Welcome to Flapi, {{ username }}!
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" padding="15px">
+      <mj-column width="400px">
+        <mj-text font-size="20px" color="#1F2937" font-weight="bold">
+          Activate Your Account
+        </mj-text>
+        <mj-divider border-width="1px" border-style="dashed" border-color="lightgrey"></mj-divider>
+        <mj-text font-size="15px" color="#000000">
+          We are thrilled to welcome you to Crz Games! To complete the activation of your account, please enter the verification code below:
+        </mj-text>
+        <mj-text font-size="24px" color="#1F2937" font-weight="bold">
+          {{ code }}
+        </mj-text>
+        <mj-text font-size="15px" color="#000000">
+          If you have lost the link to the activation page, you can click on the following link to access your account verification directly:
+        </mj-text>
+        <mj-text font-size="15px" color="#1F2937">
+          <a href="{{ redirect_uri }}">{{ redirect_uri }}</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#1F2937" padding-top="20px">
+      <mj-column>
+        <mj-text align="center" color="#ffffff" font-size="12px">
+          We look forward to seeing you in our games!
+          <br />
+          Thank you for your trust,
+          <br />
+          The Flapi Support Team
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
