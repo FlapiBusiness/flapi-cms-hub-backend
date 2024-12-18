@@ -1,6 +1,6 @@
 import router from '@adonisjs/core/services/router'
 
-const AuthController = () => import('#controllers/http/auth_controller')
+const AuthController = () => import('#controllers/auth_controller')
 
 /**
  * Route pour l'inscription d'un utilisateur

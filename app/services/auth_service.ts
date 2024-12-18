@@ -1,39 +1,28 @@
 import User from '#models/user'
-import Hash from '@adonisjs/core/services/hash'
-import { signUpValidator } from '#validators/sign_up_validator'
-import type { SignUpPayload } from '#validators/sign_up_validator'
+import type { SignUpPayload } from '#validators/signup_validator'
 
 /**
  * Service to handle user sign up operations
+ * @class AuthService
  */
-class AuthService {
+export default class AuthService {
   /**
    * Validate and create a new user
-   * @param {SignUpPayload} payload - The validated sign-up data
+   * @param {SignUpPayload} data - Data to create the user
    * @returns {Promise<User>} - The created user instance
    */
-  public async registerUser(payload: SignUpPayload): Promise<User> {
-    console.log('Payload received:', payload)
-    // Valider les données d'entrée
-    const validatedData: SignUpPayload = await signUpValidator.validate(payload)
-
-    // Hasher le mot de passe
-    const hashedPassword: string = await Hash.make(validatedData.password)
-
-    // Créer l'utilisateur
+  public static async signUp(data: SignUpPayload): Promise<User> {
     return await User.create({
-      roleId: validatedData.role_id,
-      lastname: validatedData.lastname,
-      firstname: validatedData.firstname,
-      email: validatedData.email,
-      password: hashedPassword,
-      currencyCode: validatedData.currency_code,
-      ipAddress: validatedData.ip_address,
-      ipRegion: validatedData.ip_region,
+      roleId: data.role_id,
+      lastname: data.lastname,
+      firstname: data.firstname,
+      email: data.email,
+      password: data.password, // sera hashé automatiquement
+      currencyCode: data.currency_code,
+      ipAddress: data.ip_address,
+      ipRegion: data.ip_region,
       isActive: false,
       activeCode: Math.floor(100000 + Math.random() * 900000),
     })
   }
 }
-
-export default new AuthService()

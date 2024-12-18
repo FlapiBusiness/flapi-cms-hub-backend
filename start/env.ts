@@ -17,6 +17,7 @@ export default await Env.create(new URL('../', import.meta.url), {
   APP_KEY: Env.schema.string(),
   HOST: Env.schema.string({ format: 'host' }),
   LOG_LEVEL: Env.schema.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']),
+  HASH_DRIVER: Env.schema.enum(['scrypt', 'argon', 'bcrypt'] as const),
   DB_HOST: Env.schema.string({ format: 'host' }),
   DB_PORT: Env.schema.number(),
   DB_USER: Env.schema.string(),
@@ -44,4 +45,5 @@ export default await Env.create(new URL('../', import.meta.url), {
   SMTP_USERNAME: Env.schema.string(),
   SMTP_PASSWORD: Env.schema.string(),
   MAIL_USERNAME: Env.schema.string(),
+  API_USER_TOKEN_EXPIRATION_DAYS: Env.schema.string(),
 })

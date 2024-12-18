@@ -1,7 +1,10 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import AuthService from '#services/auth_service'
-import type { SignUpPayload } from '#validators/sign_up_validator'
+import type { SignUpPayload } from '#validators/signup_validator'
+import { signUpValidator } from '#validators/signup_validator'
 import type User from '#models/user'
+import BadRequestException from '#exceptions/bad_request_exception'
+import logger from '@adonisjs/core/services/logger'
 
 /**
  * Controller to handle user authentication operations
@@ -16,38 +19,24 @@ export default class AuthController {
    */
   public async signUp({ request, response }: HttpContext): Promise<void> {
     try {
-      // Récupération stricte des données avec typage
-      const payload: SignUpPayload = request.only([
-        'role_id',
-        'lastname',
-        'firstname',
-        'email',
-        'password',
-        'password_confirmation',
-        'ip_address',
-        'ip_region',
-        'currency_code',
-      ]) as SignUpPayload
+      // Valider les données d'entrée
+      const payload: SignUpPayload = await signUpValidator.validate(request.all())
 
       // Appel du service pour créer un nouvel utilisateur
-      const user: User = await AuthService.registerUser(payload)
+      const user: User = await AuthService.signUp(payload)
 
-      // Retourner une réponse de succès
-      response.created({
+      // Répondre avec succès et renvoyer les données de l'utilisateur
+      response.status(201).json({
         message: 'User registered successfully',
         data: {
           id: user.id,
           email: user.email,
-          active_code: user.activeCode,
+          activeCode: user.activeCode,
         },
       })
-    } catch (error) {
-      console.error(error)
-      // Gestion des erreurs
-      response.badRequest({
-        message: 'User registration failed',
-        error: error.messages || error.message || 'Validation failure',
-      })
+    } catch (error: any) {
+      logger.error(error)
+      throw new BadRequestException()
     }
   }
 }
