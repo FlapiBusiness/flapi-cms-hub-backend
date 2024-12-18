@@ -46,6 +46,20 @@ services:
     networks:
       - app-network
 
+  mailhog:
+    container_name: mailhog
+    image: mailhog/mailhog
+    logging:
+      driver: 'none' # disable saving logs
+    environment:
+      - MH_USERNAME=support@develop.flapi.org
+      - MH_PASSWORD=fakepassword
+    ports:
+      - '1025:1025' # smtp server
+      - '8025:8025' # web ui
+    networks:
+      - app-network
+
 networks:
   app-network:
 
