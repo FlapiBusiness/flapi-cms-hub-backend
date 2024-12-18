@@ -9,9 +9,9 @@
  * @property {string} COMMERCIAL - Responsable commercial
  */
 export enum UserRoles {
-  SUPER_ADMIN = 'super_admin',
+  SUPER_ADMIN = 'superAdmin',
   ADMIN = 'admin',
-  APP_MANAGER = 'app_manager',
+  APP_MANAGER = 'appManager',
   MARKETING = 'marketing',
   SUPPORT = 'support',
   COMMERCIAL = 'commercial',
