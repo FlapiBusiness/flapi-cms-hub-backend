@@ -10,4 +10,19 @@ router.post('/signup', [AuthController, 'signUp'])
 /**
  * Route pour la connexion d'un utilisateur
  */
-router.post('/signIn', [AuthController, 'signIn'])
+router.post('/signin', [AuthController, 'signIn'])
+
+/**
+ * Route pour la déconnexion d'un utilisateur
+ */
+router.post('/signout', [AuthController, 'signOut'])
+
+/**
+ * Route pour la vérification du code de validation
+ */
+router.post('/verifycode', [AuthController, 'verifyCode'])
+
+/**
+ * Route pour le renvoi du code de validation
+ */
+router.post('/resend-code', [AuthController, 'resendNewCodeVerificationAccount'])
