@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: staging-hub-flapi-backend-cert
+  namespace: staging-hub-flapi-backend
+spec:
+  secretName: staging-hub-flapi-backend-tls
+  dnsNames:
+    - staging.hub.flapi.api.org
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer

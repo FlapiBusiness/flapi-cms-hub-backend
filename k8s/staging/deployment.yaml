@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: staging-hub-flapi-backend-deployment
+  namespace: staging-hub-flapi-backend
+  labels:
+    app: staging-hub-flapi-backend
+spec:
+  selector:
+    matchLabels:
+      app: staging-hub-flapi-backend
+  template:
+    metadata:
+      labels:
+        app: staging-hub-flapi-backend
+    spec:
+      containers:
+        - name: prod-hub-flapi-backend
+          image: corentin35/hub-flapi-backend:staging-${TAG_VERSION}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3333
+          env:
+            - name: PORT
+              value: '3333'
+          resources:
+            requests:
+              cpu: '300m'
+              memory: '400Mi'
+            limits:
+              cpu: '600m'
+              memory: '800Mi'
+      imagePullSecrets:
+        - name: regcred

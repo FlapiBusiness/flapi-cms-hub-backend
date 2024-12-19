@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: staging-hub-flapi-backend-ingress
+  namespace: staging-hub-flapi-backend
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - staging.hub.flapi.api.org
+      secretName: staging-hub-flapi-backend-tls
+  rules:
+    - host: staging.hub.flapi.api.org
+      http:
+        paths:
+          - pathType: Prefix
+            path: '/'
+            backend:
+              service:
+                name: staging-hub-flapi-backend-service
+                port:
+                  number: 3333
