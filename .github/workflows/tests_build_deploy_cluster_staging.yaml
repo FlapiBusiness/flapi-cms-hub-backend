@@ -71,4 +71,4 @@ jobs:
           KUBE_CONFIG: ${{ secrets.KUBECONFIG }}
         with:
           args: |
-            apply -f k8s/staging/namespace.yaml -f k8s/staging/certificate.yaml -f k8s/staging/docker-registry-secret.yaml -f k8s/staging/deployment.yaml -f k8s/staging/hpa.yaml -f k8s/staging/ingress.yaml -f k8s/staging/service.yaml
+            apply -f k8s/staging/namespace.yaml -f k8s/staging/certificate.yaml -f k8s/staging/docker-registry-secret.yaml -f k8s/staging/deployment.yaml -f k8s/staging/ingress.yaml -f k8s/staging/service.yaml
