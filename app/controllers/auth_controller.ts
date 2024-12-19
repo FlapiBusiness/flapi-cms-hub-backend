@@ -30,13 +30,10 @@ export default class AuthController {
       const payload: SignUpPayload = await signUpValidator.validate(request.all())
 
       // Appel du service pour créer un nouvel utilisateur
-      const user: User = await AuthService.signUp(payload)
+      await AuthService.signUp(payload)
 
       // Répondre avec succès et renvoyer les données de l'utilisateur
-      response.status(201).json({
-        id: user.id,
-        email: user.email,
-      })
+      response.status(201).json({ message: 'Account created successfully' })
     } catch (error: any) {
       logger.error(error)
       throw new BadRequestException()
@@ -57,16 +54,9 @@ export default class AuthController {
       const token: AccessToken = await User.accessTokens.create(user)
 
       return response.status(200).json({
-        user: {
-          id: user.id,
-          email: user.email,
-        },
-        token: {
-          value: token.value!.release(),
-          type: 'bearer',
-          expiresAt: token.expiresAt,
-          abilities: token.abilities,
-        },
+        token: token.value!.release(),
+        type: 'bearer',
+        expiresAt: token.expiresAt,
       })
     } catch (error) {
       logger.error(error)

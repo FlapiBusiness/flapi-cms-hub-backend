@@ -16,7 +16,7 @@ export default class AuthService {
    * @param {SignUpPayload} data - Data to create the user
    * @returns {Promise<User>} - The created user instance
    */
-  public static async signUp(data: SignUpPayload): Promise<User> {
+  public static async signUp(data: SignUpPayload): Promise<void> {
     try {
       const user: User = await User.create({
         roleId: data.role_id,
@@ -37,8 +37,6 @@ export default class AuthService {
         redirect_uri:
           env.get('FRONTEND_APP_BASE_URL') + env.get('FRONTEND_APP_REDIRECT_URI_ACCOUNT_VALIDATE') + user.email,
       })
-
-      return user
     } catch (error: any) {
       logger.error(error)
       throw error
