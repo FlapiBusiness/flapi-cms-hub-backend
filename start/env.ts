@@ -46,4 +46,8 @@ export default await Env.create(new URL('../', import.meta.url), {
   SMTP_PASSWORD: Env.schema.string(),
   MAIL_USERNAME: Env.schema.string(),
   API_USER_TOKEN_EXPIRATION_DAYS: Env.schema.string(),
+  FRONTEND_APP_BASE_URL: Env.schema.string(),
+  FRONTEND_APP_REDIRECT_URI_ACCOUNT_VALIDATE: Env.schema.string(),
+  FRONTEND_APP_REDIRECT_URI_FORGOT_PASSWORD: Env.schema.string(),
+  FRONTEND_APP_REDIRECT_URI_SEND_MAIL_TO_MODIFY_EMAIL: Env.schema.string(),
 })
