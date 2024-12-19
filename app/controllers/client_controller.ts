@@ -2,8 +2,6 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { GitHubService, delay } from '#services/github_service'
 import env from '#start/env'
 import AWSDomainService from '#services/aws_domain_service'
-import MailService from '#services/mail_service'
-import O2SwitchService from '#services/o2switch_service'
 import logger from '@adonisjs/core/services/logger'
 
 /**
@@ -38,23 +36,6 @@ export default class ClientController {
       'workflowInputs',
       'subdomain',
     ])
-
-    console.log('payload', request.all())
-
-    const sucess3: boolean = await O2SwitchService.restoreDatabase(
-      'reco5282_pofo_backup-17-12-2024-21-38-41.sql.gz',
-      7200,
-      true,
-    )
-    console.log('success3 : ', sucess3)
-    return
-
-    // Étape 0 : Envoyer un email
-    await MailService.sendEmail('corentindevpro@hotmail.com', 'welcome', 'Bienvenue sur Flapi!', {
-      username: 'Corentin',
-      code: '123456',
-      redirect_uri: 'https://flapi.org/activate?code=123456',
-    })
 
     try {
       // Étape 1 : Créer les sous-domaines
