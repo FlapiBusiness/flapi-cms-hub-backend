@@ -1,0 +1,13 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: prod-hub-flapi-backend-hpa
+  namespace: prod-hub-flapi-backend
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: prod-hub-flapi-api-backend-deployment
+  minReplicas: 3
+  maxReplicas: 15
+  targetCPUUtilizationPercentage: 70
