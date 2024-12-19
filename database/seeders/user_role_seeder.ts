@@ -1,19 +1,16 @@
-import { BaseSeeder } from '@adonisjs/lucid/seeders'
-import UserRoleModel from '#models/user_role'
-import { UserRoles } from '#enums/user_roles'
+import {BaseSeeder} from "@adonisjs/lucid/seeders";
+import {UserRoles} from "#enums/user_roles";
+import UserRole from "#models/user_role";
 
-export default class extends BaseSeeder {
-  async run() {
-    // Write your database queries inside the run method
-    for (const roleKey in UserRoles) {
-      // Vérifier si l'enum est une valeur (et non une clé)
-      if (Object.prototype.hasOwnProperty.call(UserRoles, roleKey)) {
-        const roleName: string = UserRoles[roleKey as keyof typeof UserRoles]
-        const data = { name: roleName }
+export default class UserRoleSeeder extends BaseSeeder {
+  public static environment: string[] = ['development', 'development-remote', 'test', 'staging', 'production']
 
-        // Créer ou récupérer le rôle
-        await UserRoleModel.firstOrCreate({ name: data.name }, data)
-      }
+  public async run(): Promise<void> {
+    const roles: string[] = Object.values(UserRoles) as string[]
+
+    for (const roleName of roles) {
+      const data: { name: string } = { name: roleName }
+      await UserRole.firstOrCreate({ name: data.name }, data)
     }
   }
 }
