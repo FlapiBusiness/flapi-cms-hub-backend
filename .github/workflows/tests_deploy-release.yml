@@ -17,20 +17,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Node.js to latest version LTS and setup cache
+      - name: Install Node.js to specific version LTS and setup cache
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
           cache: 'npm'
 
       - name: Install dependencies for project
-        run: npm install --ignore-scripts
+        run: npm install
 
       - name: Lint TypeScript and ESLint for project
         run: npm run lint:ts && npm run lint:eslint
 
-      - name: Run Unit and Functional tests for project
+      - name: Setup Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Build and run with Docker Compose
+        run: |
+          docker-compose up --build -d
+
+      - name: Check services healthiness
+        uses: thegabriele97/dockercompose-health-action@main
+        with:
+          timeout: '60'
+          workdir: '.'
+
+      - name: Japa - Run tests unit
         run: npm run test:staging-prod
+
+      - name: Shutdown Docker Compose
+        run: |
+          docker-compose down
 
       - name: Deploy PR (main) for new Release
         uses: googleapis/release-please-action@v4
@@ -38,4 +57,4 @@ jobs:
           release-type: node
           target-branch: main
           config-file: 'release-please-config.json'
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}
