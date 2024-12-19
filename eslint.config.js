@@ -16,7 +16,6 @@ const mainConfig = {
     'contracts/**/*.{ts,tsx}',
     'commands/**/*.{ts,tsx}',
     'database/seeders/**/*.{ts,tsx}',
-    'database/factories/**/*.{ts,tsx}',
   ],
   ignores: [
     'app/exceptions/handler.ts',
