@@ -90,7 +90,7 @@ export default class AWSDomainService {
         (record: ResourceRecordSet): boolean => record.Name === `${fullSubdomain}.`, // Les noms dans Route 53 incluent un "." final
       )
 
-      return !recordExists
+      return recordExists || false
     } catch (error) {
       logger.error('Erreur lors de la vérification de la disponibilité du sous-domaine:', error)
       throw error

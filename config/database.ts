@@ -12,7 +12,8 @@ const dbConfig = defineConfig({
         user: env.get('DB_USER'),
         password: env.get('DB_PASSWORD'),
         database: env.get('DB_DATABASE'),
-      },
+        debug: env.get('DB_DEBUG'),
+      } as any,
       migrations: {
         naturalSort: true,
         paths: ['database/migrations'],

@@ -67,7 +67,13 @@ export default class O2SwitchService {
         },
       )
 
-      return response.data?.status === 1
+      if (response.data?.status === 1) {
+        await this.linkUserToDatabase(dbName)
+        return true
+      } else {
+        logger.warn('Failed to create database:', response.data?.errors || 'Unknown error')
+        return false
+      }
     } catch (error) {
       logger.error('Error while creating database :', error)
       throw error
