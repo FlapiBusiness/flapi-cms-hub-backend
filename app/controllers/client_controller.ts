@@ -1,8 +1,22 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { GitHubService, delay } from '#services/github_service'
-import env from '#start/env'
-import AWSDomainService from '#services/aws_domain_service'
 import logger from '@adonisjs/core/services/logger'
+import O2SwitchService from '#services/o2switch_service'
+import AWSDomainService from '#services/aws_domain_service'
+import env from '#start/env'
+
+/**
+ * Types pour les inputs du workflow.
+ * @type {object} WorkflowInputs
+ * @property {string} customerName - Le nom du client.
+ * @property {string} projectName - Le nom du projet.
+ * @property {string} subdomain - Le sous-domaine.
+ */
+type WorkflowInputs = {
+  customerName: string
+  projectName: string
+  subdomain: string
+}
 
 /**
  * Contrôleur pour les actions liées à GitHub.
@@ -15,79 +29,106 @@ export default class ClientController {
    * @returns {Promise<void>} Une réponse JSON indiquant le succès ou l'échec.
    */
   public async createNewApplication({ request, response }: HttpContext): Promise<void> {
-    // TODO: Ajouter validator
-
-    const {
-      templateRepo,
-      newRepoName,
-      newDescriptionRepo,
-      newPrivateRepo,
-      workflowName,
-      workflowBranch,
-      subdomain,
-      workflowInputs,
-    } = request.only([
-      'templateRepo',
-      'newRepoName',
-      'newDescriptionRepo',
-      'newPrivateRepo',
-      'workflowName',
-      'workflowBranch',
-      'workflowInputs',
-      'subdomain',
-    ])
+    const { customerName, projectName, subdomain } = request.all()
 
     try {
-      // Étape 1 : Créer les sous-domaines
-      await AWSDomainService.createSubdomain(
-        env.get('AWS_DOMAIN_FLAPI_HOSTED_ZONE_ID'),
-        'dev.' + subdomain,
-        env.get('AWS_DOMAIN_FLAPI'),
-      )
-      await AWSDomainService.createSubdomain(
-        env.get('AWS_DOMAIN_FLAPI_HOSTED_ZONE_ID'),
-        'staging.' + subdomain,
-        env.get('AWS_DOMAIN_FLAPI'),
-      )
+      // Variables
+      const templateRepoFrontend: string = 'flapi-starterkit-frontend'
+      const templateRepoBackend: string = 'flapi-starterkit-backend'
 
-      // Étape 2 : Créer le repository
-      const success: boolean = await GitHubService.createRepositoryFromTemplate(templateRepo, newRepoName, {
-        description: newDescriptionRepo,
-        private: newPrivateRepo,
-      })
+      const newRepoNameFrontend: string = `flapi-${customerName.toLowerCase()}-${projectName.toLowerCase()}-frontend`
+      const newRepoNameBackend: string = `flapi-${customerName.toLowerCase()}-${projectName.toLowerCase()}-backend`
 
-      if (!success) {
-        return response.status(500).json({
-          success: false,
-          message: 'Impossible de créer le repository.',
-        })
+      const newDescriptionRepo: string = `Application ${projectName} for ${customerName}`
+      const newPrivateRepo: boolean = false
+
+      const workflowName: string = '.github/workflows/init-update-files-and-push.yaml'
+      const workflowBranch: string = 'develop'
+      const workflowInputs: WorkflowInputs = { customerName, projectName, subdomain }
+
+      const environments: string[] = ['dev', 'staging']
+      const suffixes: string[] = ['', '.api']
+
+      // Étape 1 : Vérifier si les sous-domaines existent déjà
+      for (const environment of environments) {
+        for (const suffix of suffixes) {
+          const subdomain2: string = `${environment}.${subdomain}${suffix}`
+          const subdomainExists: boolean = await AWSDomainService.checkSubdomainAvailability(
+            env.get('AWS_DOMAIN_FLAPI_HOSTED_ZONE_ID'),
+            subdomain2,
+            env.get('AWS_DOMAIN_FLAPI'),
+          )
+          if (subdomainExists) {
+            return response.status(400).json({
+              success: false,
+              message: `Le sous-domaine "${subdomain2}.${env.get('AWS_DOMAIN_FLAPI')}" est déjà utilisé.`,
+            })
+          }
+        }
       }
 
-      // Attendre 15 secondes pour laisser le temps à GitHub de créer le repository
+      // Étape 2 : Créer les sous-domaines sur AWS
+      for (const environment of environments) {
+        for (const suffix of suffixes) {
+          const subdomain2: string = `${environment}.${subdomain}${suffix}`
+          await AWSDomainService.createSubdomain(
+            env.get('AWS_DOMAIN_FLAPI_HOSTED_ZONE_ID'),
+            subdomain2,
+            env.get('AWS_DOMAIN_FLAPI'),
+          )
+        }
+      }
+
+      // Étape 3 : Créer les bases de données sur O2Switch
+      const databaseEnvironments: string[] = ['development-remote', 'staging', 'production']
+      for (const dbEnv of databaseEnvironments) {
+        const dbName: string = `${customerName}_${projectName}_${dbEnv}`
+        await O2SwitchService.createDatabase(dbName)
+      }
+
+      // Étape 4 : Créer les repositories GitHub
+      const repositories: { template: string; name: string }[] = [
+        { template: templateRepoFrontend, name: newRepoNameFrontend },
+        { template: templateRepoBackend, name: newRepoNameBackend },
+      ]
+
+      for (const repo of repositories) {
+        const isCreated: boolean = await GitHubService.createRepositoryFromTemplate(repo.template, repo.name, {
+          description: newDescriptionRepo,
+          private: newPrivateRepo,
+        })
+        if (!isCreated) {
+          return response.status(500).json({
+            success: false,
+            message: `Impossible de créer le repository "${repo.name}".`,
+          })
+        }
+      }
+
+      // Attendre 15 secondes pour laisser GitHub finaliser la création des repositories
       await delay(15000)
 
-      // Debug
-      await GitHubService.listWorkflows(newRepoName)
-
-      // Étape 3 : Déclencher le workflow
-      const workflowSuccess: boolean = await GitHubService.triggerWorkflow(
-        newRepoName,
-        workflowName,
-        workflowBranch,
-        workflowInputs,
-      )
-
-      if (workflowSuccess) {
-        return response.status(201).json({
-          success: true,
-          message: `Le repository "${newRepoName}" a été créé, et le workflow "${workflowName}" a été déclenché.`,
-        })
-      } else {
-        return response.status(500).json({
-          success: false,
-          message: 'Le repository a été créé, mais le déclenchement du workflow a échoué.',
-        })
+      // Étape 5 : Déclencher les workflows
+      for (const repo of repositories) {
+        const workflowTriggered: boolean = await GitHubService.triggerWorkflow(
+          repo.template,
+          workflowName,
+          workflowBranch,
+          workflowInputs,
+        )
+        if (!workflowTriggered) {
+          return response.status(500).json({
+            success: false,
+            message: `Le déclenchement du workflow pour le repository "${repo.name}" a échoué.`,
+          })
+        }
       }
+
+      // Succès
+      return response.status(201).json({
+        success: true,
+        message: `Les repositories "${newRepoNameFrontend}" et "${newRepoNameBackend}" ont été créés avec succès et les workflows ont été déclenchés.`,
+      })
     } catch (error) {
       logger.error('Erreur dans GitHubController :', error.message)
       return response.status(500).json({

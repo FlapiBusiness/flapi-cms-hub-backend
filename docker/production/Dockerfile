@@ -39,6 +39,7 @@ ENV FRONTEND_APP_BASE_URL=http://localhost:1460 \
     DB_USER=reco5282_all \
     DB_PASSWORD=jbq5zgn2puw@qnr.RUE \
     DB_DATABASE=reco5282_hub_flapi_production \
+    DB_DEBUG=false \
     HEALTH=test \
     AWS_ACCESS_KEY_ID=AKIASWISVXTAQGDKVB6P \
     AWS_SECRET_ACCESS_KEY=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 \
@@ -66,6 +67,6 @@ ENV FRONTEND_APP_BASE_URL=http://localhost:1460 \
 # Install production dependencies only
 RUN npm ci --omit="dev" --ignore-scripts
 
-CMD npm run db:migration:run:staging-prod && \
+CMD npm run db:migration:staging-prod && \
     npm run db:seed && \
     npm run start

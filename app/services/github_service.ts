@@ -1,6 +1,7 @@
 import type { AxiosResponse } from 'axios'
 import axios from 'axios'
 import logger from '@adonisjs/core/services/logger'
+import env from '#start/env'
 
 /**
  * Représente les options pour la création d'un repository GitHub depuis un template.
@@ -35,8 +36,8 @@ type GitHubRepoCreateRequest = {
  */
 export class GitHubService {
   private static readonly GITHUB_API_URL: string = 'https://api.github.com'
-  private static readonly token: string = process.env.GITHUB_PERSONAL_ACCESS_TOKEN!
-  private static readonly username: string = process.env.GITHUB_USERNAME_OR_ORGANIZATION!
+  private static readonly token: string = env.get('GITHUB_PERSONAL_ACCESS_TOKEN')
+  private static readonly username: string = env.get('GITHUB_USERNAME_OR_ORGANIZATION')
 
   /**
    * Crée un repository à partir d'un template GitHub.
@@ -127,7 +128,7 @@ export class GitHubService {
         },
       })
 
-      logger.info('Workflows disponibles :', response.data)
+      console.log('Workflows disponibles :', response.data)
     } catch (error: any) {
       logger.error('Erreur lors de la récupération des workflows :', error.response?.data || error.message)
       throw error
