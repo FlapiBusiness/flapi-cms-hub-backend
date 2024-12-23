@@ -36,3 +36,11 @@ export const configureSuite: Config['configureSuite'] = (suite) => {
     return suite.setup(() => testUtils.httpServer().start())
   }
 }
+
+/**
+ * Configure reporters to log the test results
+ * Learn more - https://docs.adonisjs.com/guides/testing/introduction
+ */
+export const reporters: Config['reporters'] = {
+  activated: ['spec']
+}
