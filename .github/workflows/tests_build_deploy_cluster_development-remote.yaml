@@ -1,0 +1,90 @@
+name: tests_build_deploy_cluster_development-remote
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+jobs:
+  tests_build_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js to specific version LTS and setup cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install dependencies for project
+        run: npm install
+
+      - name: Lint TypeScript and ESLint for project
+        run: npm run lint:ts && npm run lint:eslint
+
+      - name: Setup Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Build and run with Docker Compose
+        run: |
+          docker-compose up --build -d
+
+      - name: Check services healthiness
+        uses: thegabriele97/dockercompose-health-action@main
+        with:
+          timeout: '60'
+          workdir: '.'
+
+      - name: Japa - Run tests unit
+        run: npm run test:staging-prod
+
+      - name: Shutdown Docker Compose
+        run: |
+          docker-compose down
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/development-remote/Dockerfile
+          push: true
+          tags: corentin35/hub-flapi-backend:develop-${{ github.sha }}
+          build-args: |
+            DB_USER=${{ secrets.O2SWITCH_DATABASE_USERNAME }}
+            DB_PASSWORD=${{ secrets.O2SWITCH_DATABASE_PASSWORD }}
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            O2SWITCH_API_TOKEN=${{ secrets.O2SWITCH_API_TOKEN }}
+            O2SWITCH_DATABASE_USERNAME=${{ secrets.O2SWITCH_DATABASE_USERNAME }}
+            O2SWITCH_DATABASE_PASSWORD=${{ secrets.O2SWITCH_DATABASE_PASSWORD }}
+            GITHUB_PERSONAL_ACCESS_TOKEN=${{ secrets.PAT_TOKEN }}
+            MAILJET_API_SECRET_KEY=${{ secrets.MAILJET_API_SECRET_KEY }}
+            MAILJET_API_KEY=${{ secrets.MAILJET_API_KEY }}
+
+      - name: Replace image tag in deployment.yaml for Kubernetes
+        run: |
+          sed -i 's/\${TAG_VERSION}/'${{ github.sha }}'/g' k8s/development-remote/deployment.yaml
+
+      - name: Connect to the cluster K3S for deploy
+        uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBECONFIG }}
+        with:
+          args: |
+            apply -f k8s/development-remote/namespace.yaml 
+            -f k8s/development-remote/certificate.yaml 
+            -f k8s/development-remote/docker-registry-secret.yaml 
+            -f k8s/development-remote/deployment.yaml 
+            -f k8s/development-remote/ingress.yaml 
+            -f k8s/development-remote/service.yaml
