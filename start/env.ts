@@ -27,7 +27,7 @@ export default await Env.create(new URL('../', import.meta.url), {
   HEALTH: Env.schema.string(),
   AWS_ACCESS_KEY_ID: Env.schema.string(),
   AWS_SECRET_ACCESS_KEY: Env.schema.string(),
-  AWS_SERVER_CLUSTER_K3S: Env.schema.string(),
+  AWS_SERVER_LOADBALANCER_CLUSTER_K3S: Env.schema.string(),
   GITHUB_PERSONAL_ACCESS_TOKEN: Env.schema.string(),
   GITHUB_USERNAME_OR_ORGANIZATION: Env.schema.string(),
   AWS_DOMAIN_FLAPI_HOSTED_ZONE_ID: Env.schema.string(),

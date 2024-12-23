@@ -117,7 +117,7 @@ export default class AWSDomainService {
               TTL: 60,
               ResourceRecords: [
                 {
-                  Value: env.get('AWS_SERVER_CLUSTER_K3S'), // FIXME: A terme remplacer par le load balancer de AWS
+                  Value: env.get('AWS_SERVER_LOADBALANCER_CLUSTER_K3S'), // FIXME: A terme remplacer par l'ip du load balancer réel de AWS
                 },
               ],
             },
