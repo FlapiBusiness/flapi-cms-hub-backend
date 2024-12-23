@@ -6,18 +6,18 @@ const dbConfig = defineConfig({
   connections: {
     mysql: {
       client: 'mysql2',
+      debug: env.get('DB_DEBUG'),
       connection: {
         host: env.get('DB_HOST'),
         port: env.get('DB_PORT'),
         user: env.get('DB_USER'),
         password: env.get('DB_PASSWORD'),
-        database: env.get('DB_DATABASE'),
-        debug: env.get('DB_DEBUG'),
-      } as any,
+        database: env.get('DB_DATABASE_NAME')
+      },
       migrations: {
         naturalSort: true,
-        paths: ['database/migrations'],
-      },
+        paths: ['database/migrations']
+      }
     },
   },
 })
