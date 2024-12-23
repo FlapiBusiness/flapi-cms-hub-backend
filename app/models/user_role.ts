@@ -15,5 +15,5 @@ export default class UserRole extends BaseModel {
   declare public createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare public updatedAt: DateTime
+  declare public updatedAt: DateTime | null
 }

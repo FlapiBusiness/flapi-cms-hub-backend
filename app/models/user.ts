@@ -44,13 +44,13 @@ export default class User extends compose(BaseModel, AuthFinder) {
    * The last name of the user.
    */
   @column()
-  declare public lastname: string | null
+  declare public lastname: string
 
   /**
    * The first name of the user.
    */
   @column()
-  declare public firstname: string | null
+  declare public firstname: string
 
   /**
    * The email address of the user. Must be unique.
@@ -111,7 +111,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
    * The timestamp when the user was last updated.
    */
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare public updatedAt: DateTime
+  declare public updatedAt: DateTime | null
 
   /**
    * The access token provider for the user model.
@@ -122,6 +122,6 @@ export default class User extends compose(BaseModel, AuthFinder) {
     prefix: 'oat_',
     table: 'auth_access_tokens',
     type: 'auth_token',
-    tokenSecretLength: 40,
+    tokenSecretLength: 80,
   })
 }

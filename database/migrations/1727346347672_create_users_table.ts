@@ -5,10 +5,10 @@ export default class extends BaseSchema {
 
   async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.increments('id').notNullable()
-      table.integer('role_id').unsigned().references('id').inTable('user_roles')
-      table.string('lastname').nullable()
-      table.string('firstname').nullable()
+      table.increments('id').primary().notNullable()
+      table.integer('role_id').unsigned().references('id').inTable('user_roles').notNullable()
+      table.string('lastname').notNullable()
+      table.string('firstname').notNullable()
       table.string('email', 254).notNullable().unique()
       table.string('password').notNullable()
       table.string('currency_code').nullable()
