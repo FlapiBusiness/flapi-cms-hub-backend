@@ -60,6 +60,17 @@ jobs:
           file: ./docker/staging/Dockerfile
           push: true
           tags: corentin35/hub-flapi-backend:staging-${{ github.sha }}
+          build-args: |
+            DB_USER=${{ secrets.O2SWITCH_DATABASE_USERNAME }}
+            DB_PASSWORD=${{ secrets.O2SWITCH_DATABASE_PASSWORD }}
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            O2SWITCH_API_TOKEN=${{ secrets.O2SWITCH_API_TOKEN }}
+            O2SWITCH_DATABASE_USERNAME=${{ secrets.O2SWITCH_DATABASE_USERNAME }}
+            O2SWITCH_DATABASE_PASSWORD=${{ secrets.O2SWITCH_DATABASE_PASSWORD }}
+            GITHUB_PERSONAL_ACCESS_TOKEN=${{ secrets.PAT_TOKEN }}
+            MAILJET_API_SECRET_KEY=${{ secrets.MAILJET_API_SECRET_KEY }}
+            MAILJET_API_KEY=${{ secrets.MAILJET_API_KEY }}
 
       - name: Replace image tag in deployment.yaml for Kubernetes
         run: |
@@ -71,4 +82,9 @@ jobs:
           KUBE_CONFIG: ${{ secrets.KUBECONFIG }}
         with:
           args: |
-            apply -f k8s/staging/namespace.yaml -f k8s/staging/certificate.yaml -f k8s/staging/docker-registry-secret.yaml -f k8s/staging/deployment.yaml -f k8s/staging/ingress.yaml -f k8s/staging/service.yaml
+            apply -f k8s/staging/namespace.yaml 
+            -f k8s/staging/certificate.yaml 
+            -f k8s/staging/docker-registry-secret.yaml 
+            -f k8s/staging/deployment.yaml 
+            -f k8s/staging/ingress.yaml 
+            -f k8s/staging/service.yaml
