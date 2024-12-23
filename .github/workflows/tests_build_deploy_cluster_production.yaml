@@ -60,6 +60,7 @@ jobs:
             GITHUB_PERSONAL_ACCESS_TOKEN=${{ secrets.PAT_TOKEN }}
             MAILJET_API_SECRET_KEY=${{ secrets.MAILJET_API_SECRET_KEY }}
             MAILJET_API_KEY=${{ secrets.MAILJET_API_KEY }}
+            HEALTH=${{ secrets.HEALTH }}
 
       - name: Replace image tag in deployment.yaml for Kubernetes
         run: |
