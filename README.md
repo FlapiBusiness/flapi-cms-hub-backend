@@ -101,6 +101,13 @@ git clone git@github.com:FlapiBusiness/MyRepo.git
 2. Download and Install Docker (Ubuntu) : https://docs.docker.com/engine/install/ubuntu/
 3. Download and Install Docker (Debian) : https://docs.docker.com/engine/install/debian/
 ```
+4. Créez le fichier `.env` à la racine du projet et copiez-y le contenu du fichier `.env.example`, puis ajouter les valeurs des variables d'environnement :
+   - AWS_ACCESS_KEY_ID
+   - AWS_SECRET_ACCESS_KEY
+   - O2SWITCH_API_TOKEN
+   - O2SWITCH_DATABASE_USERNAME
+   - O2SWITCH_DATABASE_PASSWORD
+   - GITHUB_PERSONAL_ACCESS_TOKEN
 
 <br /><br /><br /><br />
 
