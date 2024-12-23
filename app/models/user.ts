@@ -118,10 +118,10 @@ export default class User extends compose(BaseModel, AuthFinder) {
    * This provider is used to generate and validate access tokens for the user.
    */
   public static accessTokens: DbAccessTokensProvider<typeof User> = DbAccessTokensProvider.forModel(User, {
-    expiresIn: env.get('API_USER_TOKEN_EXPIRATION_DAYS') + ' days',
+    expiresIn: env.get('API_USER_TOKEN_EXPIRATION'),
     prefix: 'oat_',
     table: 'auth_access_tokens',
     type: 'auth_token',
-    tokenSecretLength: 80,
+    tokenSecretLength: env.get('API_USER_TOKEN_SECRET_LENGTH'),
   })
 }
