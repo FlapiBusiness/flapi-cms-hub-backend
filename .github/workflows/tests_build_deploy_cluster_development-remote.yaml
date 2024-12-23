@@ -54,8 +54,8 @@ jobs:
           timeout: '60'
           workdir: '.'
 
-      - name: Japa - Run tests unit
-        run: npm run test:staging-prod
+      - name: Japa - Run Unit Tests and Functional Tests
+        run: npm run test:all
 
       - name: Shutdown Docker Compose
         run: |

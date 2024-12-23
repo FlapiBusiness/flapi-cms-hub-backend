@@ -59,7 +59,7 @@ jobs:
           workdir: '.'
 
       - name: Japa - Run tests unit
-        run: npm run test:staging-prod
+        run: npm run test:all
 
       - name: Shutdown Docker Compose
         run: |
