@@ -24,3 +24,4 @@ swagger.yml
 
 # Environment
 .env
+.env.test
