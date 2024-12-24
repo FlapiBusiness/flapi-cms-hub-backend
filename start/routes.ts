@@ -3,11 +3,11 @@ import router from '@adonisjs/core/services/router'
 /**
  * Import des routes
  */
-import './routes/aws.ts'
-import './routes/swagger.ts'
-import './routes/health.ts'
-import './routes/client.ts'
-import './routes/auth.ts'
+import './routes/aws.js'
+import './routes/swagger.js'
+import './routes/health.js'
+import './routes/client.js'
+import './routes/auth.js'
 
 /**
  * Cette route est utilisée pour tester le fonctionnement de base de l'application,
