@@ -42,5 +42,5 @@ export const configureSuite: Config['configureSuite'] = (suite) => {
  * Learn more - https://docs.adonisjs.com/guides/testing/introduction
  */
 export const reporters: Config['reporters'] = {
-  activated: ['spec']
+  activated: ['spec'],
 }
