@@ -6,7 +6,7 @@ metadata:
 spec:
   secretName: prod-hub-flapi-backend-tls
   dnsNames:
-    - hub.flapi.api.org
+    - hub.api.flapi.org
   issuerRef:
     name: letsencrypt-production
     kind: ClusterIssuer

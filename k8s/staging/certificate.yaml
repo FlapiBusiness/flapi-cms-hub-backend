@@ -6,7 +6,7 @@ metadata:
 spec:
   secretName: staging-hub-flapi-backend-tls
   dnsNames:
-    - staging.hub.flapi.api.org
+    - staging.hub.api.flapi.org
   issuerRef:
     name: letsencrypt-production
     kind: ClusterIssuer

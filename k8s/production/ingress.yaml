@@ -9,10 +9,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - hub.flapi.api.org
+        - hub.api.flapi.org
       secretName: prod-hub-flapi-backend-tls
   rules:
-    - host: hub.flapi.api.org
+    - host: hub.api.flapi.org
       http:
         paths:
           - pathType: Prefix
