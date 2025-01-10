@@ -15,7 +15,7 @@ spec:
         app: dev-hub-flapi-backend
     spec:
       containers:
-        - name: prod-hub-flapi-backend
+        - name: dev-hub-flapi-backend
           image: corentin35/hub-flapi-backend:develop-${TAG_VERSION}
           imagePullPolicy: Always
           ports:
