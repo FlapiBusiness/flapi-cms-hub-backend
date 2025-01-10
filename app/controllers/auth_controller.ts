@@ -5,8 +5,8 @@ import { signUpValidator } from '#validators/signup_validator'
 import User from '#models/user'
 import BadRequestException from '#exceptions/bad_request_exception'
 import logger from '@adonisjs/core/services/logger'
-import type { LoginPayload } from '#validators/login_validator'
-import { loginValidator } from '#validators/login_validator'
+import type { SignInPayload } from '#validators/signin_validator'
+import { signInValidator } from '#validators/signin_validator'
 import type { AccessToken } from '@adonisjs/auth/access_tokens'
 import type { VerifyCodePayload } from '#validators/verifycode_validator'
 import { verifyCodeValidator } from '#validators/verifycode_validator'
@@ -49,7 +49,7 @@ export default class AuthController {
    */
   public async signIn({ request, response }: HttpContext): Promise<void> {
     try {
-      const payload: LoginPayload = await loginValidator.validate(request.all())
+      const payload: SignInPayload = await signInValidator.validate(request.all())
       const user: User = await AuthService.signIn(payload)
       const token: AccessToken = await User.accessTokens.create(user)
 

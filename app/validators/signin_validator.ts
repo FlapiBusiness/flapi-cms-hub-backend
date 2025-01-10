@@ -3,7 +3,7 @@ import vine from '@vinejs/vine'
 /**
  *  Type manuel basé sur le schéma pour typé le validateur.
  */
-export type LoginPayload = {
+export type SignInPayload = {
   email: string
   password: string
 }
@@ -12,7 +12,7 @@ export type LoginPayload = {
  * Validation rules for the login form.
  */
 // eslint-disable-next-line @typescript-eslint/typedef
-export const loginValidator = vine.compile(
+export const signInValidator = vine.compile(
   vine.object({
     email: vine.string().trim().email().toLowerCase(),
     password: vine.string().minLength(8),

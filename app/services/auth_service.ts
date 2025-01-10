@@ -1,6 +1,6 @@
 import User from '#models/user'
 import type { SignUpPayload } from '#validators/signup_validator'
-import type { LoginPayload } from '#validators/login_validator'
+import type { SignInPayload } from '#validators/signin_validator'
 import logger from '@adonisjs/core/services/logger'
 import MailService from '#services/mail_service'
 import env from '#start/env'
@@ -45,10 +45,10 @@ export default class AuthService {
 
   /**
    * Authenticate a user with email and password
-   * @param {LoginPayload} payload - The login data
+   * @param {SignInPayload} payload - The login data
    * @returns {Promise<User>} - The authenticated user instance
    */
-  public static async signIn(payload: LoginPayload): Promise<User> {
+  public static async signIn(payload: SignInPayload): Promise<User> {
     try {
       // Vérifier les identifiants (email et mot de passe)
       const user: User = await User.verifyCredentials(payload.email, payload.password)
