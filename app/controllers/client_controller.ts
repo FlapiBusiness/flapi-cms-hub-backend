@@ -46,20 +46,20 @@ export default class ClientController {
       const workflowBranch: string = 'develop'
       const workflowInputs: WorkflowInputs = { customerName, projectName, subdomain }
 
-      const environments: string[] = ['dev', 'staging']
+      const environments: string[] = ['dev.', 'staging.', ''] // '' = pour la production
       const suffixes: string[] = ['', '.api']
 
       // Étape 1 : Vérifier si les sous-domaines existent déjà
       for (const environment of environments) {
         for (const suffix of suffixes) {
-          const subdomain2: string = `${environment}.${subdomain}${suffix}`
+          const subdomain2: string = `${environment}${subdomain}${suffix}`
           const subdomainExists: boolean = await AWSDomainService.checkSubdomainAvailability(
             env.get('AWS_DOMAIN_FLAPI_HOSTED_ZONE_ID'),
             subdomain2,
             env.get('AWS_DOMAIN_FLAPI'),
           )
           if (subdomainExists) {
-            return response.status(400).json({
+            response.status(400).json({
               success: false,
               message: `Le sous-domaine "${subdomain2}.${env.get('AWS_DOMAIN_FLAPI')}" est déjà utilisé.`,
             })
@@ -69,8 +69,9 @@ export default class ClientController {
 
       // Étape 2 : Créer les sous-domaines sur AWS
       for (const environment of environments) {
+        // Créer le sous-domaine principal pour les environnements dev et staging
         for (const suffix of suffixes) {
-          const subdomain2: string = `${environment}.${subdomain}${suffix}`
+          const subdomain2: string = `${environment}${subdomain}${suffix}`
           await AWSDomainService.createSubdomain(
             env.get('AWS_DOMAIN_FLAPI_HOSTED_ZONE_ID'),
             subdomain2,
@@ -98,7 +99,7 @@ export default class ClientController {
           private: newPrivateRepo,
         })
         if (!isCreated) {
-          return response.status(500).json({
+          response.status(500).json({
             success: false,
             message: `Impossible de créer le repository "${repo.name}".`,
           })
@@ -117,7 +118,7 @@ export default class ClientController {
           workflowInputs,
         )
         if (!workflowTriggered) {
-          return response.status(500).json({
+          response.status(500).json({
             success: false,
             message: `Le déclenchement du workflow pour le repository "${repo.name}" a échoué.`,
           })
@@ -125,13 +126,13 @@ export default class ClientController {
       }
 
       // Succès
-      return response.status(201).json({
+      response.status(201).json({
         success: true,
         message: `Les repositories "${newRepoNameFrontend}" et "${newRepoNameBackend}" ont été créés avec succès et les workflows ont été déclenchés.`,
       })
     } catch (error) {
       logger.error('Erreur dans GitHubController :', error.message)
-      return response.status(500).json({
+      response.status(500).json({
         success: false,
         message: 'Une erreur est survenue lors de la création du repository.',
         error: error.message,
