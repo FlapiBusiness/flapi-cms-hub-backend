@@ -9,7 +9,7 @@ export const UserFactory = factory
       lastname: faker.person.lastName(),
       firstname: faker.person.firstName(),
       email: faker.internet.email(),
-      password: 'A1b@xyz!', // Mot de passe par défaut hashé
+      password: 'Toto35!!!', // Mot de passe par défaut hashé
       currencyCode: faker.helpers.arrayElement(['USD', 'EUR', 'GBP', null]), // Choix aléatoire parmi ces devises ou null
       ipAddress: faker.internet.ip(),
       ipRegion: faker.location.streetAddress(),
