@@ -82,7 +82,7 @@ export default class ClientController {
       // Étape 3 : Créer les bases de données sur O2Switch
       const databaseEnvironments: string[] = ['development-remote', 'staging', 'production']
       for (const dbEnv of databaseEnvironments) {
-        const dbName: string = `${customerName}_${projectName}_${dbEnv}`
+        const dbName: string = `${customerName}-${projectName}_${dbEnv}`
         await O2SwitchService.createDatabase(dbName)
       }
 
