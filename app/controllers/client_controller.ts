@@ -31,24 +31,24 @@ export default class ClientController {
   public async createNewApplication({ request, response }: HttpContext): Promise<void> {
     const { customerName, projectName, subdomain } = request.all()
 
+    // Variables
+    const templateRepoFrontend: string = 'flapi-starterkit-frontend'
+    const templateRepoBackend: string = 'flapi-starterkit-backend'
+
+    const newRepoNameFrontend: string = `flapi-${customerName.toLowerCase()}-${projectName.toLowerCase()}-frontend`
+    const newRepoNameBackend: string = `flapi-${customerName.toLowerCase()}-${projectName.toLowerCase()}-backend`
+
+    const newDescriptionRepo: string = `Application ${projectName} for ${customerName}`
+    const newPrivateRepo: boolean = false
+
+    const workflowName: string = '.github/workflows/init-update-files-and-push.yaml'
+    const workflowBranch: string = 'develop'
+    const workflowInputs: WorkflowInputs = { customerName, projectName, subdomain }
+
+    const environments: string[] = ['dev.', 'staging.', ''] // '' = pour la production
+    const suffixes: string[] = ['', '.api']
+
     try {
-      // Variables
-      const templateRepoFrontend: string = 'flapi-starterkit-frontend'
-      const templateRepoBackend: string = 'flapi-starterkit-backend'
-
-      const newRepoNameFrontend: string = `flapi-${customerName.toLowerCase()}-${projectName.toLowerCase()}-frontend`
-      const newRepoNameBackend: string = `flapi-${customerName.toLowerCase()}-${projectName.toLowerCase()}-backend`
-
-      const newDescriptionRepo: string = `Application ${projectName} for ${customerName}`
-      const newPrivateRepo: boolean = false
-
-      const workflowName: string = '.github/workflows/init-update-files-and-push.yaml'
-      const workflowBranch: string = 'develop'
-      const workflowInputs: WorkflowInputs = { customerName, projectName, subdomain }
-
-      const environments: string[] = ['dev.', 'staging.', ''] // '' = pour la production
-      const suffixes: string[] = ['', '.api']
-
       // Étape 1 : Vérifier si les sous-domaines existent déjà
       for (const environment of environments) {
         for (const suffix of suffixes) {
@@ -131,7 +131,11 @@ export default class ClientController {
         message: `Les repositories "${newRepoNameFrontend}" et "${newRepoNameBackend}" ont été créés avec succès et les workflows ont été déclenchés.`,
       })
     } catch (error) {
-      logger.error('Erreur dans GitHubController :', error.message)
+      logger.error('Erreur dans GitHubController :', {
+        message: error.message,
+        response: error.response ? error.response.data : 'No response body',
+        status: error.response ? error.response.status : 'No status',
+      })
       response.status(500).json({
         success: false,
         message: 'Une erreur est survenue lors de la création du repository.',
