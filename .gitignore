@@ -23,5 +23,4 @@ swagger.json
 swagger.yml
 
 # Environment
-.env
-.env.test
+.env.keys

@@ -30,19 +30,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
-      - name: Generate .env file
+      - name: Decode .env.keys file
         run: |
-          cp .env.example .env
-          sed -i 's/AWS_ACCESS_KEY_ID=xxxxxxx/AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}/g' .env
-          sed -i 's/AWS_SECRET_ACCESS_KEY=xxxxxxx/AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}/g' .env
-          sed -i 's/O2SWITCH_API_TOKEN=xxxxxxx/O2SWITCH_API_TOKEN=${{ secrets.O2SWITCH_API_TOKEN }}/g' .env
-          sed -i 's/O2SWITCH_DATABASE_USERNAME=xxxxxxx/O2SWITCH_DATABASE_USERNAME=${{ secrets.O2SWITCH_DATABASE_USERNAME }}/g' .env
-          sed -i 's/O2SWITCH_DATABASE_PASSWORD=xxxxxxx/O2SWITCH_DATABASE_PASSWORD=${{ secrets.O2SWITCH_DATABASE_PASSWORD }}/g' .env
-          sed -i 's/GITHUB_PERSONAL_ACCESS_TOKEN=xxxxxxx/GITHUB_PERSONAL_ACCESS_TOKEN=${{ secrets.PAT_TOKEN }}/g' .env
-
-      - name: Generate .env.test file
-        run: |
-          cp .env.test.example .env.test
+          echo "${{ secrets.ENCRYPTED_ENV_KEYS_ADONISJS }}" | base64 --decode > .env.keys
 
       - name: Build and run with Docker Compose
         run: |
@@ -74,17 +64,6 @@ jobs:
           file: ./docker/staging/Dockerfile
           push: true
           tags: corentin35/hub-flapi-backend:staging-${{ github.sha }}
-          build-args: |
-            DB_USER=${{ secrets.O2SWITCH_DATABASE_USERNAME }}
-            DB_PASSWORD=${{ secrets.O2SWITCH_DATABASE_PASSWORD }}
-            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            O2SWITCH_API_TOKEN=${{ secrets.O2SWITCH_API_TOKEN }}
-            O2SWITCH_DATABASE_USERNAME=${{ secrets.O2SWITCH_DATABASE_USERNAME }}
-            O2SWITCH_DATABASE_PASSWORD=${{ secrets.O2SWITCH_DATABASE_PASSWORD }}
-            GITHUB_PERSONAL_ACCESS_TOKEN=${{ secrets.PAT_TOKEN }}
-            MAILJET_API_SECRET_KEY=${{ secrets.MAILJET_API_SECRET_KEY }}
-            MAILJET_API_KEY=${{ secrets.MAILJET_API_KEY }}
 
       - name: Replace image tag in deployment.yaml for Kubernetes
         run: |

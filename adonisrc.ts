@@ -15,6 +15,7 @@ export default defineConfig({
     () => import('@adonisjs/lucid/commands'),
     () => import('@adonisjs/mail/commands'),
     () => import('@tuyau/core/commands'),
+    () => import('@foadonis/crypt/commands')
   ],
 
   /*
