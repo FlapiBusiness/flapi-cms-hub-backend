@@ -18,10 +18,10 @@ export default class AWSDomainController {
 
     try {
       const isAvailable: boolean = await AWSDomainService.checkDomainAvailability(domain)
-      return response.status(200).json({ domain, isAvailable })
+      response.status(200).json({ domain, isAvailable })
     } catch (error) {
       logger.error('Erreur lors de la vérification du domaine:', error)
-      return response.status(500).json({ message: 'Erreur lors de la vérification de la disponibilité du domaine.' })
+      response.status(500).json({ message: 'Erreur lors de la vérification de la disponibilité du domaine.' })
     }
   }
 
@@ -38,10 +38,10 @@ export default class AWSDomainController {
 
     try {
       const isAvailable: boolean = await AWSDomainService.checkSubdomainAvailability(hostedZoneId, subdomain, domain)
-      return response.status(200).json({ subdomain, isAvailable })
+      response.status(200).json({ subdomain, isAvailable })
     } catch (error) {
       logger.error('Erreur lors de la vérification du domaine:', error)
-      return response.status(500).json({ message: 'Erreur lors de la vérification de la disponibilité du domaine.' })
+      response.status(500).json({ message: 'Erreur lors de la vérification de la disponibilité du domaine.' })
     }
   }
 }

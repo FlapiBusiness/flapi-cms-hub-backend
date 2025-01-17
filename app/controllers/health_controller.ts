@@ -18,10 +18,10 @@ export default class HealthController {
 
     // Return the report with a 200 status code if the application is healthy
     if (report.isHealthy) {
-      return response.ok(report)
+      response.ok(report)
     }
 
     // Return the report with a 503 status code if the application is unhealthy
-    return response.serviceUnavailable(report)
+    response.serviceUnavailable(report)
   }
 }

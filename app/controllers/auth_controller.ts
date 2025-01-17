@@ -53,14 +53,14 @@ export default class AuthController {
       const user: User = await AuthService.signIn(payload)
       const token: AccessToken = await User.accessTokens.create(user)
 
-      return response.status(200).json({
+      response.status(200).json({
         token: token.value!.release(),
         type: 'bearer',
         expiresAt: token.expiresAt,
       })
     } catch (error) {
       logger.error(error)
-      return response.unauthorized({ message: 'Authentication failed' })
+      response.unauthorized({ message: 'Authentication failed' })
     }
   }
 
@@ -85,13 +85,13 @@ export default class AuthController {
         }
 
         // Répondre avec succès
-        return response.status(200).json({ message: 'Logged out from all sessions' })
+        response.status(200).json({ message: 'Logged out from all sessions' })
       }
 
-      return response.unauthorized({ message: 'No active session found' })
+      response.unauthorized({ message: 'No active session found' })
     } catch (error: any) {
       logger.error(error)
-      return response.internalServerError({ message: 'Unable to logout' })
+      response.internalServerError({ message: 'Unable to logout' })
     }
   }
 
@@ -118,6 +118,6 @@ export default class AuthController {
   public async resendNewCodeVerificationAccount({ request, response }: HttpContext): Promise<any> {
     const payload: ResendNewCodePayload = await resendNewCodeValidator.validate(request.all())
     await AuthService.resendNewCodeVerificationAccount(payload.email)
-    return response.status(200).json({ message: 'New code sent' })
+    response.status(200).json({ message: 'New code sent' })
   }
 }
