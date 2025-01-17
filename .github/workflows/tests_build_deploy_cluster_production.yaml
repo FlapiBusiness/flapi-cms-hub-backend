@@ -20,7 +20,7 @@ jobs:
       - name: Decode .env.keys file
         run: |
           echo "${{ secrets.ENCRYPTED_ENV_KEYS_ADONISJS }}" | base64 --decode > .env.keys
-          
+
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
