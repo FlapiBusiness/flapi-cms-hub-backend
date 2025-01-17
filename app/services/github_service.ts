@@ -32,12 +32,27 @@ type GitHubRepoCreateRequest = {
 }
 
 /**
+ * Représente l'en-tête d'authentification pour les requêtes à l'API GitHub.
+ * @type {object} AuthHeader
+ * @property {string} Authorization - Le jeton d'authentification.
+ * @property {string} Accept - Le type de contenu accepté.
+ */
+type AuthHeader = {
+  Authorization: string
+  Accept: string
+}
+
+/**
  * Service pour interagir avec l'API GitHub et créer des repositories à partir de templates.
  */
 export class GitHubService {
   private static readonly GITHUB_API_URL: string = 'https://api.github.com'
-  private static readonly token: string = env.get('GITHUB_PERSONAL_ACCESS_TOKEN')
-  private static readonly username: string = env.get('GITHUB_USERNAME_OR_ORGANIZATION')
+  private static readonly TOKEN: string = env.get('GITHUB_PERSONAL_ACCESS_TOKEN')
+  private static readonly USERNAME: string = env.get('GITHUB_USERNAME_OR_ORGANIZATION')
+  private static readonly AUTH_HEADER: AuthHeader = {
+    Authorization: `token ${this.TOKEN}`,
+    Accept: 'application/vnd.github+json',
+  }
 
   /**
    * Crée un repository à partir d'un template GitHub.
@@ -51,9 +66,9 @@ export class GitHubService {
     newRepoName: string,
     options: GitHubRepoCreateOptions = {},
   ): Promise<boolean> {
-    const url: string = `${this.GITHUB_API_URL}/repos/${this.username}/${templateRepo}/generate`
+    const url: string = `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${templateRepo}/generate`
     const data: GitHubRepoCreateRequest = {
-      owner: this.username,
+      owner: this.USERNAME,
       name: newRepoName,
       description: options.description || '',
       private: options.private || false,
@@ -62,10 +77,7 @@ export class GitHubService {
 
     try {
       const response: AxiosResponse<any, any> = await axios.post(url, data, {
-        headers: {
-          Authorization: `token ${this.token}`,
-          Accept: 'application/vnd.github+json',
-        },
+        headers: this.AUTH_HEADER,
       })
 
       // Si la réponse est réussie, retourne true
@@ -92,17 +104,14 @@ export class GitHubService {
   ): Promise<boolean> {
     // Encoder le nom du fichier pour l'URL
     const encodedWorkflowName: string = encodeURIComponent(workflowName)
-    const url: string = `${this.GITHUB_API_URL}/repos/${this.username}/${repo}/actions/workflows/${encodedWorkflowName}/dispatches`
+    const url: string = `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/actions/workflows/${encodedWorkflowName}/dispatches`
 
     try {
       const response: AxiosResponse<any, any> = await axios.post(
         url,
         { ref, inputs },
         {
-          headers: {
-            Authorization: `token ${this.token}`,
-            Accept: 'application/vnd.github+json',
-          },
+          headers: this.AUTH_HEADER,
         },
       )
 
@@ -119,18 +128,44 @@ export class GitHubService {
    * @returns {Promise<void>}
    */
   public static async listWorkflows(repo: string): Promise<void> {
-    const url: string = `${this.GITHUB_API_URL}/repos/${this.username}/${repo}/actions/workflows`
+    const url: string = `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/actions/workflows`
 
     try {
       const response: AxiosResponse<any, any> = await axios.get(url, {
-        headers: {
-          Authorization: `token ${this.token}`,
-        },
+        headers: this.AUTH_HEADER,
       })
 
       console.log('Workflows disponibles :', response.data)
     } catch (error: any) {
       logger.error('Erreur lors de la récupération des workflows :', error.response?.data || error.message)
+      throw error
+    }
+  }
+
+  /**
+   * Protège les branches "main", "staging" et "develop" avec les règles demandées.
+   * @param {string} repo - Le nom du repository.
+   * @returns {Promise<void>} Une promesse qui se résout après la protection des branches.
+   */
+  public static async protectBranches(repo: string): Promise<void> {
+    const branches: string[] = ['main', 'staging', 'develop']
+    const protectionRules: any = {
+      required_pull_request_reviews: {
+        required_approving_review_count: 1, // Requiert au moins 1 approbation pour le merge
+      },
+      lock_branch: true, // Rend la branche en lecture seule
+    }
+
+    try {
+      for (const branch of branches) {
+        const url: string = `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/branches/${branch}/protection`
+        await axios.put(url, protectionRules, {
+          headers: this.AUTH_HEADER,
+        })
+        logger.info(`Protection appliquée avec succès sur la branche "${branch}" du repository "${repo}".`)
+      }
+    } catch (error: any) {
+      logger.error('Erreur lors de la protection des branches :', error.response?.data || error.message)
       throw error
     }
   }
