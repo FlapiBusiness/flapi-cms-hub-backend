@@ -70,7 +70,7 @@
     "@commitlint/cli": "^19.6.1",
     "@commitlint/config-conventional": "^19.6.0",
     "@japa/api-client": "^2.0.4",
-    "@japa/assert": "^3.0.0",
+    "@japa/assert": "^4.0.1",
     "@japa/plugin-adonisjs": "^3.0.1",
     "@japa/runner": "^3.1.4",
     "@stylistic/eslint-plugin": "^2.13.0",
