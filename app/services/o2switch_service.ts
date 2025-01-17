@@ -30,6 +30,15 @@ export type MySQLDatabase = {
 }
 
 /**
+ * Représente l'en-tête d'authentification pour les requêtes à l'API O2Switch.
+ * @type {object} AuthHeader
+ * @property {string} Authorization - Le jeton d'authentification.
+ */
+type AuthHeader = {
+  Authorization: string
+}
+
+/**
  * Type pour les hôtes MySQL distants autorisé à se connecter à la base de données.
  * Chaque clé est une adresse IP ou un nom d'hôte, et chaque valeur est une note associée.
  * @type {object} AuthorizedRemoteHostsDatabase
@@ -42,7 +51,7 @@ export type AuthorizedRemoteHostsDatabase = Record<string, string>
  * @class O2SwitchService
  */
 export default class O2SwitchService {
-  private static readonly AUTH_HEADER: { Authorization: string } = {
+  private static readonly AUTH_HEADER: AuthHeader = {
     // Doc : https://docs.cpanel.net/knowledge-base/security/how-to-use-cpanel-api-tokens/
     Authorization: `cpanel ${env.get('O2SWITCH_USERNAME')}:${env.get('O2SWITCH_API_TOKEN')}`,
   }
