@@ -43,4 +43,29 @@ export default class ProjectService {
       throw error
     }
   }
+
+  /**
+   * @returns {Promise<Project[]>} - A promise that resolves with an array of projects
+   */
+  public static async getProjects(): Promise<Project[]> {
+    try {
+      return await Project.all()
+    } catch (error: any) {
+      logger.error(error)
+      throw error
+    }
+  }
+
+  /**
+   * @param {number} id - The project ID
+   * @returns {Promise<Project | null>} - A promise that resolves with a project or null
+   */
+  public static async getProjectById(id: number): Promise<Project | null> {
+    try {
+      return await Project.findBy('id', id)
+    } catch (error: any) {
+      logger.error(error)
+      throw error
+    }
+  }
 }
