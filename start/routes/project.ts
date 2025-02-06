@@ -21,3 +21,8 @@ router.get('/project/:id', [ProjectController, 'getProject'])
  * Route pour la mise à jour d'un projet
  */
 router.put('/project/:id', [ProjectController, 'updateProject'])
+
+/**
+ * Route pour la suppression d'un projet
+ */
+router.delete('/project/:id', [ProjectController, 'deleteProject'])

@@ -57,4 +57,15 @@ export default class ProjectsController {
     await ProjectService.updateProject(params.id, payload)
     response.status(200).json({ message: 'Project updated successfully' })
   }
+
+  /**
+   * Delete a project
+   * @param {HttpContext} ctx - The HTTP context containing the request and response objects
+   * @param {HttpContext['response']} ctx.response - The HTTP response object
+   * @param {HttpContext['params']} ctx.params - The HTTP params object
+   */
+  public async deleteProject({ response, params }: HttpContext): Promise<void> {
+    await ProjectService.deleteProject(params.id)
+    response.status(200).json({ message: 'Project deleted successfully' })
+  }
 }

@@ -106,4 +106,18 @@ export default class ProjectService {
       throw error
     }
   }
+
+  /**
+   * Delete a project
+   * @param {number} projectId - The project ID
+   */
+  public static async deleteProject(projectId: number): Promise<void> {
+    try {
+      const project: Project = await ProjectService.getProjectById(projectId)
+      await project.delete()
+    } catch (error: any) {
+      logger.error(error)
+      throw error
+    }
+  }
 }
