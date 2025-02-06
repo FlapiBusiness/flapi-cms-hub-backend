@@ -20,11 +20,11 @@ export default class ProjectService {
     try {
       // Create the project
       await Project.create({
-        applicationName: payload.application_name,
-        userId: payload.user_id,
-        domainName: payload.domain_name,
-        fileId: payload.file_id,
-        databaseId: payload.database_id,
+        application_name: payload.application_name,
+        user_id: payload.user_id,
+        domain_name: payload.domain_name,
+        file_id: payload.file_id,
+        database_id: payload.database_id,
       })
       const user: User = await User.findByOrFail('id', payload.user_id)
 
@@ -81,18 +81,18 @@ export default class ProjectService {
 
       await project
         .merge({
-          applicationName: payload.application_name,
-          userId: payload.user_id,
-          domainName: payload.domain_name,
-          fileId: payload.file_id,
-          databaseId: payload.database_id,
+          application_name: payload.application_name,
+          user_id: payload.user_id,
+          domain_name: payload.domain_name,
+          file_id: payload.file_id,
+          database_id: payload.database_id,
         })
         .save()
       await project.refresh()
 
-      const user: User = await User.findByOrFail('id', project.userId)
+      const user: User = await User.findByOrFail('id', project.user_id)
 
-      const db: Database = await Database.findByOrFail('id', project.databaseId)
+      const db: Database = await Database.findByOrFail('id', project.database_id)
       await MailService.sendEmail(user.email, 'project-updated', 'Project Updated', {
         username: user.firstname + ' ' + user.lastname,
         appName: payload.application_name,

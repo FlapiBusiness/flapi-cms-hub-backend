@@ -19,19 +19,19 @@ export default class Project extends BaseModel {
    * The name of the application.
    */
   @column()
-  declare public applicationName: string
+  declare public application_name: string
 
   /**
    * The ID of the user associated with the project.
    */
   @column()
-  declare public userId: number
+  declare public user_id: number
 
   /**
    * The relationship to the User model.
    */
   @belongsTo((): typeof User => User, {
-    foreignKey: 'userId',
+    foreignKey: 'user_id',
   })
   declare public user: BelongsTo<typeof User>
 
@@ -39,30 +39,34 @@ export default class Project extends BaseModel {
    * The domain name of the project.
    */
   @column()
-  declare public domainName: string
+  declare public domain_name: string
 
   /**
    * The ID of the file associated with the project.
    */
   @column()
-  declare public fileId: number
+  declare public file_id: number
 
   /**
    * The relationship to the File model.
    */
-  @belongsTo((): typeof File => File)
+  @belongsTo((): typeof File => File, {
+    foreignKey: 'file_id',
+  })
   declare public file: BelongsTo<typeof File>
 
   /**
    * The ID of the database associated with the project.
    */
   @column()
-  declare public databaseId: number
+  declare public database_id: number
 
   /**
    * The relationship to the Database model.
    */
-  @belongsTo((): typeof Database => Database)
+  @belongsTo((): typeof Database => Database, {
+    foreignKey: 'database_id',
+  })
   declare public database: BelongsTo<typeof Database>
 
   /**
