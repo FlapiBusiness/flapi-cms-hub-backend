@@ -30,7 +30,9 @@ export default class Project extends BaseModel {
   /**
    * The relationship to the User model.
    */
-  @belongsTo((): typeof User => User)
+  @belongsTo((): typeof User => User, {
+    foreignKey: 'userId',
+  })
   declare public user: BelongsTo<typeof User>
 
   /**

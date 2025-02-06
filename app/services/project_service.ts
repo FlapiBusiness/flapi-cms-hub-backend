@@ -1,4 +1,4 @@
-import type { ProjectPayload } from '#validators/project_validator'
+import type { ProjectPayload, UpdateProjectPayload } from '#validators/project_validator'
 import logger from '@adonisjs/core/services/logger'
 import MailService from '#services/mail_service'
 import env from '#start/env'
@@ -12,6 +12,7 @@ import Database from '#models/database'
  */
 export default class ProjectService {
   /**
+   * Create a new project
    * @param {ProjectPayload} payload - Data to create the project
    * @returns {Promise<void>} - A promise that resolves with no return value
    */
@@ -25,10 +26,8 @@ export default class ProjectService {
         fileId: payload.file_id,
         databaseId: payload.database_id,
       })
-      const user: User | null = await User.findBy('id', payload.user_id)
-      if (!user) {
-        throw new Error('User not found')
-      }
+      const user: User = await User.findByOrFail('id', payload.user_id)
+
       const db: Database | null = await Database.findBy('id', payload.database_id)
       await MailService.sendEmail(user.email, 'project-created', 'Project Created', {
         username: user.firstname + ' ' + user.lastname,
@@ -45,6 +44,7 @@ export default class ProjectService {
   }
 
   /**
+   * Get all projects
    * @returns {Promise<Project[]>} - A promise that resolves with an array of projects
    */
   public static async getProjects(): Promise<Project[]> {
@@ -57,12 +57,50 @@ export default class ProjectService {
   }
 
   /**
+   * Get a project by ID
    * @param {number} id - The project ID
-   * @returns {Promise<Project | null>} - A promise that resolves with a project or null
+   * @returns {Promise<Project>} - A promise that resolves with a project or null
    */
-  public static async getProjectById(id: number): Promise<Project | null> {
+  public static async getProjectById(id: number): Promise<Project> {
     try {
-      return await Project.findBy('id', id)
+      return await Project.findByOrFail('id', id)
+    } catch (error: any) {
+      logger.error(error)
+      throw error
+    }
+  }
+
+  /**
+   * Update a project
+   * @param {number} projectId - The project ID
+   * @param {UpdateProjectPayload} payload - The data to update the project
+   */
+  public static async updateProject(projectId: number, payload: UpdateProjectPayload): Promise<void> {
+    try {
+      const project: Project = await ProjectService.getProjectById(projectId)
+
+      await project
+        .merge({
+          applicationName: payload.application_name,
+          userId: payload.user_id,
+          domainName: payload.domain_name,
+          fileId: payload.file_id,
+          databaseId: payload.database_id,
+        })
+        .save()
+      await project.refresh()
+
+      const user: User = await User.findByOrFail('id', project.userId)
+
+      const db: Database = await Database.findByOrFail('id', project.databaseId)
+      await MailService.sendEmail(user.email, 'project-updated', 'Project Updated', {
+        username: user.firstname + ' ' + user.lastname,
+        appName: payload.application_name,
+        domainName: payload.domain_name,
+        databaseName: db.name,
+        redirect_uri:
+          env.get('FRONTEND_APP_BASE_URL') + env.get('FRONTEND_APP_REDIRECT_URI_ACCOUNT_VALIDATE') + user.email,
+      })
     } catch (error: any) {
       logger.error(error)
       throw error

@@ -16,3 +16,8 @@ router.get('/projects', [ProjectController, 'getProjects'])
  * Route pour la récupération d'un projet par ID
  */
 router.get('/project/:id', [ProjectController, 'getProject'])
+
+/**
+ * Route pour la mise à jour d'un projet
+ */
+router.put('/project/:id', [ProjectController, 'updateProject'])
