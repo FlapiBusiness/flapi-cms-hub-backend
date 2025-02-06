@@ -17,12 +17,14 @@ export default class File extends BaseModel {
    * The ID of the bucket associated with the file.
    */
   @column()
-  declare public bucketId: number
+  declare public bucket_id: number
 
   /**
    * The relationship to the Bucket model.
    */
-  @belongsTo((): typeof Bucket => Bucket)
+  @belongsTo((): typeof Bucket => Bucket, {
+    foreignKey: 'bucket_id',
+  })
   declare public bucket: BelongsTo<typeof Bucket>
 
   /**
