@@ -1,13 +1,15 @@
 import hash from '@adonisjs/core/services/hash'
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import { BaseModel, belongsTo, column, manyToMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, ManyToMany } from '@adonisjs/lucid/types/relations'
 import UserRole from '#models/user_role'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import env from '#start/env'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import { Hash } from '@adonisjs/hash'
 import { compose } from '@adonisjs/core/helpers'
+import Project from '#models/project'
+import Team from '#models/team'
 
 /**
  * Fonction de mixin pour la gestion de l'authentification.
@@ -100,6 +102,22 @@ export default class User extends compose(BaseModel, AuthFinder) {
    */
   @column()
   declare public stripeCustomerId: number | null
+
+  @manyToMany(() => Team, {
+    pivotTable: 'user_team',
+    pivotColumns: ['role'],
+  })
+  declare public teams: ManyToMany<typeof Team>
+
+  /**
+   * Relation many-to-many avec les projets via la table pivot 'user_project_permissions'
+   * On récupère ici le champ 'has_access' pour savoir si l'utilisateur a accès au projet.
+   */
+  @manyToMany(() => Project, {
+    pivotTable: 'user_project_permissions',
+    pivotColumns: ['has_access'],
+  })
+  declare public project_permissions: ManyToMany<typeof Project>
 
   /**
    * The timestamp when the user was created.

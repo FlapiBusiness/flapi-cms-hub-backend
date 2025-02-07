@@ -1,9 +1,10 @@
-import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import { BaseModel, belongsTo, column, manyToMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, ManyToMany } from '@adonisjs/lucid/types/relations'
 import { DateTime } from 'luxon'
 import User from '#models/user'
 import File from '#models/file'
 import Database from '#models/database'
+import Team from '#models/team'
 
 /**
  * The Project model represents a project in the application.
@@ -68,6 +69,24 @@ export default class Project extends BaseModel {
     foreignKey: 'database_id',
   })
   declare public database: BelongsTo<typeof Database>
+
+  /**
+   * Relation many-to-many avec les équipes via la table pivot 'team_project'
+   */
+  @manyToMany(() => Team, {
+    pivotTable: 'team_project',
+  })
+  declare public teams: ManyToMany<typeof Team>
+
+  /**
+   * Relation many-to-many avec les utilisateurs via la table pivot 'user_project_permissions'
+   * Récupère la colonne 'has_access' pour définir l'accès de l'utilisateur au projet.
+   */
+  @manyToMany(() => User, {
+    pivotTable: 'user_project_permissions',
+    pivotColumns: ['has_access'],
+  })
+  declare public user_permissions: ManyToMany<typeof User>
 
   /**
    * The timestamp when the project was created.
