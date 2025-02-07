@@ -1,5 +1,6 @@
 import Database from '#models/database'
 import logger from '@adonisjs/core/services/logger'
+import Project from '#models/project'
 
 /**
  * Service to handle database operations
@@ -72,6 +73,10 @@ export default class DatabaseService {
    */
   public static async deleteDatabase(id: number): Promise<void> {
     try {
+      const project: Project[] = await Project.query().where('database_id', id)
+      if (project.length > 0) {
+        throw new Error('Database is used by a project')
+      }
       const db: Database = await Database.findOrFail(id)
       await db.delete()
     } catch (error: any) {
