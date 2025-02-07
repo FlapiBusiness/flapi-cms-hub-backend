@@ -16,10 +16,10 @@ export default class ProjectService {
    * @param {ProjectPayload} payload - Data to create the project
    * @returns {Promise<void>} - A promise that resolves with no return value
    */
-  public static async createProject(payload: ProjectPayload): Promise<void> {
+  public static async createProject(payload: ProjectPayload): Promise<Project> {
     try {
       // Create the project
-      await Project.create({
+      const project: Project = await Project.create({
         application_name: payload.application_name,
         user_id: payload.user_id,
         domain_name: payload.domain_name,
@@ -37,6 +37,7 @@ export default class ProjectService {
         redirect_uri:
           env.get('FRONTEND_APP_BASE_URL') + env.get('FRONTEND_APP_REDIRECT_URI_ACCOUNT_VALIDATE') + user.email,
       })
+      return project
     } catch (error: any) {
       logger.error(error)
       throw error
