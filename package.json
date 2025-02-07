@@ -47,7 +47,7 @@
     "@adonisjs/cors": "^2.2.1",
     "@adonisjs/lucid": "^21.6.0",
     "@adonisjs/mail": "^9.2.2",
-    "@aws-sdk/client-route-53": "^3.738.0",
+    "@aws-sdk/client-route-53": "^3.743.0",
     "@aws-sdk/client-route-53-domains": "^3.738.0",
     "@foadonis/crypt": "^0.0.2",
     "@keycloak/keycloak-admin-client": "^26.1.1",
