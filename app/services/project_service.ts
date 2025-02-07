@@ -71,6 +71,20 @@ export default class ProjectService {
   }
 
   /**
+   * Get a project by user ID
+   * @param {number} userId - The user ID
+   * @returns {Promise<Project>} - A promise that resolves with a project or null
+   */
+  public static async getProjectByUserId(userId: number): Promise<Project[]> {
+    try {
+      return await Project.findManyBy('user_id', userId)
+    } catch (error: any) {
+      logger.error(error)
+      throw error
+    }
+  }
+
+  /**
    * Update a project
    * @param {number} projectId - The project ID
    * @param {UpdateProjectPayload} payload - The data to update the project
