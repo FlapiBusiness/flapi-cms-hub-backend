@@ -6,6 +6,9 @@ import swagger from '#config/swagger'
  * Swagger YAML output
  */
 router.get('/swagger', async (): Promise<any> => {
+  console.log({
+    toto: AutoSwagger.default,
+  })
   return AutoSwagger.default.docs(router.toJSON(), swagger)
 })
 

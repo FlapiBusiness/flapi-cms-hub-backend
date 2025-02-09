@@ -2,27 +2,42 @@ import router from '@adonisjs/core/services/router'
 
 const AuthController = () => import('#controllers/auth_controller')
 
-/**
- * Route pour l'inscription d'un utilisateur
- */
 router.post('/signup', [AuthController, 'signUp'])
 
 /**
- * Route pour la connexion d'un utilisateur
+ * @tag Auth
+ * @summary Connexion d'un utilisateur
+ * @description Permet à un utilisateur de se connecter
+ * @requestBody <LoginPayload>
+ * @responseBody 200 - {"token": "xxxxx", "type": "bearer", "expiresAt": "date"}
+ * @responseBody 401 - {"message": "Authentication failed"}
  */
 router.post('/signin', [AuthController, 'signIn'])
 
 /**
- * Route pour la déconnexion d'un utilisateur
+ * @tag Auth
+ * @summary Déconnexion d'un utilisateur
+ * @description Déconnecte l'utilisateur de toutes ses sessions actives
+ * @responseBody 200 - {"message": "Logged out from all sessions"}
+ * @responseBody 401 - {"message": "No active session found"}
  */
 router.post('/signout', [AuthController, 'signOut'])
 
 /**
- * Route pour la vérification du code de validation
+ * @tag Auth
+ * @summary Vérification du code d'activation
+ * @description Vérifie le code d'activation envoyé par email
+ * @requestBody <VerifyCodePayload>
+ * @responseBody 200 - {"message": "Account is active"}
+ * @responseBody 400 - {"message": "Invalid code"}
  */
 router.post('/verifycode', [AuthController, 'verifyCode'])
 
 /**
- * Route pour le renvoi du code de validation
+ * @tag Auth
+ * @summary Renvoi du code de validation
+ * @description Envoie un nouveau code de validation à l'utilisateur
+ * @requestBody <ResendNewCodePayload>
+ * @responseBody 200 - {"message": "New code sent"}
  */
 router.post('/resend-code', [AuthController, 'resendNewCodeVerificationAccount'])

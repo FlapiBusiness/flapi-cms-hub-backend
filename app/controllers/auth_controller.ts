@@ -18,11 +18,14 @@ import { resendNewCodeValidator } from '#validators/resendnewcode_validator'
  */
 export default class AuthController {
   /**
-   * Handle user signup
-   * @param {HttpContext} ctx - The HTTP context containing the request and response objects
-   * @param {HttpContext['request']} ctx.request - The HTTP request object
-   * @param {HttpContext['response']} ctx.response - The HTTP response object
-   * @returns {Promise<void>} - A promise that resolves with no return value
+   * @signUp
+   * @tag Auth
+   * @summary Inscription d'un utilisateur
+   * @description Permet d'inscrire un nouvel utilisateur
+   * @requestBody <signUpValidator>
+   * @responseBody 201 - {"message": "Account created successfully"}
+   * @responseBody 400 - {"message": "Bad Request"}
+   *
    */
   public async signUp({ request, response }: HttpContext): Promise<void> {
     try {
