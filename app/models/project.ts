@@ -74,7 +74,7 @@ export default class Project extends BaseModel {
    * Relation many-to-many avec les équipes via la table pivot 'team_project'
    */
   @manyToMany(() => Team, {
-    pivotTable: 'team_project',
+    pivotTable: 'team_projects',
   })
   declare public teams: ManyToMany<typeof Team>
 

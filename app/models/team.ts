@@ -28,7 +28,7 @@ export default class Team extends BaseModel {
    * Relation many-to-many avec les utilisateurs via la table pivot 'user_team'
    */
   @manyToMany(() => User, {
-    pivotTable: 'user_team',
+    pivotTable: 'user_teams',
     pivotColumns: ['role'],
   })
   declare public users: ManyToMany<typeof User>
@@ -37,7 +37,7 @@ export default class Team extends BaseModel {
    * Relation many-to-many avec les projets via la table pivot 'team_project'
    */
   @manyToMany(() => Project, {
-    pivotTable: 'team_project',
+    pivotTable: 'team_projects',
   })
   declare public projects: ManyToMany<typeof Project>
 }

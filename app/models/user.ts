@@ -104,7 +104,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare public stripeCustomerId: number | null
 
   @manyToMany(() => Team, {
-    pivotTable: 'user_team',
+    pivotTable: 'user_teams',
     pivotColumns: ['role'],
   })
   declare public teams: ManyToMany<typeof Team>
