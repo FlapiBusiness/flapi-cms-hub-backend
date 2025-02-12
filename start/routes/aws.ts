@@ -5,9 +5,9 @@ const AWSDomainController = () => import('#controllers/aws_domain_controller') /
 /**
  * Vérifie la disponibilité d’un domaine via AWS Route 53
  */
-router.get('/aws/domain/check', [AWSDomainController, 'checkDomainAvailability'])
+router.post('/aws/domain/check', [AWSDomainController, 'checkDomainAvailability'])
 
 /**
  * Vérifie la disponibilité d’un sous domaine via AWS Route 53
  */
-router.get('/aws/subdomain/check', [AWSDomainController, 'checkSubDomainAvailability'])
+router.post('/aws/subdomain/check', [AWSDomainController, 'checkSubDomainAvailability'])

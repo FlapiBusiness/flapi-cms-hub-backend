@@ -25,6 +25,13 @@ export default class AuthController {
    * @requestBody <signUpValidator>
    * @responseBody 201 - {"message": "Account created successfully"}
    * @responseBody 400 - {"message": "Bad Request"}
+   */
+  /**
+   * Handle user signup
+   * @param {HttpContext} ctx - The HTTP context containing the request and response objects
+   * @param {HttpContext['request']} ctx.request - The HTTP request object
+   * @param {HttpContext['response']} ctx.response - The HTTP response object
+   * @returns {Promise<void>} - A promise that resolves with no return value
    *
    */
   public async signUp({ request, response }: HttpContext): Promise<void> {
@@ -42,6 +49,17 @@ export default class AuthController {
       throw new BadRequestException()
     }
   }
+
+  /**
+   * @signIn
+   * @tag Auth
+   * @summary Connexion d'un utilisateur
+   * @description Permet à un utilisateur de se connecter
+   * @requestBody <loginValidator>
+   * @content application/json
+   * @responseBody 200 - <LoginSuccessResponse>
+   * @responseBody 401 - {"message": "Authentication failed"}
+   */
 
   /**
    * Handle user login
@@ -66,6 +84,16 @@ export default class AuthController {
       response.unauthorized({ message: 'Authentication failed' })
     }
   }
+
+  /**
+   * @signOut
+   * @tag Auth
+   * @summary Déconnexion d'un utilisateur
+   * @description Permet à un utilisateur de se déconnecter
+   * @responseBody 200 - {"message": "Logged out from all sessions"}
+   * @responseBody 401 - {"message": "No active session found"}
+   * @responseBody 500 - {"message": "Unable to logout"}
+   */
 
   /**
    * Logout user from all sessions
@@ -99,7 +127,16 @@ export default class AuthController {
   }
 
   /**
-   * Verify user account with code
+   * @verifyCode
+   * @tag Auth
+   * @summary Vérification du compte utilisateur avec code
+   * @description Permet de vérifier le compte utilisateur avec un code
+   * @requestBody <verifyCodeValidator>
+   * @responseBody 200 - {"message": "Account is active"}
+   * @responseBody 400 - {"code": "E_BAD_REQUEST", "message": "Invalid code"}
+   */
+  /**
+   * Verify a user account with code
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
    * @param {HttpContext['request']} ctx.request - The HTTP request object
    * @param {HttpContext['response']} ctx.response - The HTTP response object
@@ -111,6 +148,16 @@ export default class AuthController {
     response.status(200).json({ message: 'Account is active' })
   }
 
+  /**
+   * @resendNewCodeVerificationAccount
+   * @tag Auth
+   * @summary Renvoyer le code de vérification du compte
+   * @description Permet de renvoyer le code de vérification du compte
+   * @requestBody <resendNewCodeValidator>
+   * @responseBody 200 - {"message": "New code sent"}
+   * @responseBody 422 - {"errors":[{"message": "The email field must be a valid email address", "rule": "email", "field": "email"} ] }
+   * responseBody 400- {"message": "Row not found"}
+   */
   /**
    * Resend new code verification account
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
