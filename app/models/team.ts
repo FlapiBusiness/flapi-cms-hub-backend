@@ -16,7 +16,7 @@ export default class Team extends BaseModel {
   declare public name: string
 
   @column()
-  declare public description: string
+  declare public description: string | undefined
 
   @column.dateTime({ autoCreate: true })
   declare public createdAt: DateTime

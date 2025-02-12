@@ -10,6 +10,7 @@ import './routes/client.js'
 import './routes/auth.js'
 import './routes/project.js'
 import './routes/database.js'
+import './routes/team.js'
 
 /**
  * Cette route est utilisée pour tester le fonctionnement de base de l'application,
