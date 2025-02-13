@@ -1,4 +1,5 @@
 import router from '@adonisjs/core/services/router'
+import { middleware } from '#start/kernel'
 
 const TeamController = () => import('#controllers/teams_controller')
 
@@ -13,9 +14,14 @@ router.get('/teams', [TeamController, 'getAllTeams'])
 router.get('/teams/:id', [TeamController, 'getTeamById'])
 
 /**
+ * Route to get all teams for a user
+ */
+router.get('teams/user/:user_id', [TeamController, 'getTeamsByUserId'])
+
+/**
  * Route to create a team
  */
-router.post('/teams', [TeamController, 'create'])
+router.post('/teams', [TeamController, 'create']).use(middleware.auth())
 
 /**
  * Route to update a team
@@ -25,7 +31,7 @@ router.put('/teams/:id', [TeamController, 'update'])
 /**
  * Route to delete a team
  */
-router.delete('/teams/:id', [TeamController, 'delete'])
+router.delete('/teams/:id', [TeamController, 'delete']).use(middleware.auth())
 
 /**
  * Route to add a user to a team

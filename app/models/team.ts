@@ -1,6 +1,6 @@
 // app/Models/Team.ts
-import { BaseModel, column, manyToMany } from '@adonisjs/lucid/orm'
-import type { ManyToMany } from '@adonisjs/lucid/types/relations'
+import { BaseModel, belongsTo, column, manyToMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, ManyToMany } from '@adonisjs/lucid/types/relations'
 import { DateTime } from 'luxon'
 import User from '#models/user'
 import Project from '#models/project'
@@ -17,6 +17,12 @@ export default class Team extends BaseModel {
 
   @column()
   declare public description: string | undefined
+
+  @column()
+  declare public owner_id: number
+
+  @belongsTo(() => User, { foreignKey: 'owner_id' })
+  declare public owner: BelongsTo<typeof User>
 
   @column.dateTime({ autoCreate: true })
   declare public createdAt: DateTime

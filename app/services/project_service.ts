@@ -65,7 +65,7 @@ export default class ProjectService {
    */
   public static async getProjectById(id: number): Promise<Project> {
     try {
-      return await Project.findByOrFail('id', id)
+      return await Project.query().where('id', id).preload('teams').firstOrFail()
     } catch (error: any) {
       logger.error(error)
       throw error

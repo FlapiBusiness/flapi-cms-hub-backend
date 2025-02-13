@@ -29,15 +29,30 @@ export default class TeamsController {
   }
 
   /**
+   * Récupère toutes les équipes auxquelles appartient un utilisateur.
+   * @param {HttpContext} ctx - The HTTP context containing the request and response objects
+   * @param {HttpContext['params']} ctx.params - The HTTP params object
+   * @param {HttpContext['response']} ctx.response - The HTTP response object
+   * @returns {Promise<void>} - A promise that resolves with no return value
+   */
+  public async getTeamsByUserId({ params, response }: HttpContext): Promise<void> {
+    const userId: number = Number(params.user_id)
+    const teams: Team[] = await TeamService.getTeamsByUserId(userId)
+    return response.ok(teams)
+  }
+
+  /**
    * Create a new team
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
    * @param {HttpContext['request']} ctx.request - The HTTP request object
    * @param {HttpContext['response']} ctx.response - The HTTP response object
+   * @param {HttpContext['auth']} ctx.auth - The HTTP auth object
    * @returns {Promise<void>} - A promise that resolves with no return value
    */
-  public async create({ request, response }: HttpContext): Promise<void> {
-    const data: { name: string; description: string | undefined } = request.only(['name', 'description'])
-    const team: Team = await TeamService.createTeam(data)
+  public async create({ request, response, auth }: HttpContext): Promise<void> {
+    const data: { name: string; description?: string } = request.only(['name', 'description'])
+    const owner_id: number = auth.user!.id
+    const team: Team = await TeamService.createTeam({ ...data, owner_id })
     return response.created(team)
   }
 
@@ -60,10 +75,12 @@ export default class TeamsController {
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
    * @param {HttpContext['params']} ctx.params - The HTTP params object
    * @param {HttpContext['response']} ctx.response - The HTTP response object
+   * @param {HttpContext['auth']} ctx.auth - The HTTP auth object
    * @returns {Promise<void>} - A promise that resolves with no return value
    */
-  public async delete({ params, response }: HttpContext): Promise<void> {
-    await TeamService.deleteTeam(Number(params.id))
+  public async delete({ params, response, auth }: HttpContext): Promise<void> {
+    const currentUserId: number = auth.user!.id
+    await TeamService.deleteTeam(Number(params.id), currentUserId)
     return response.noContent()
   }
 
