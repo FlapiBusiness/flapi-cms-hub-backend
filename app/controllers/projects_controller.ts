@@ -79,4 +79,31 @@ export default class ProjectsController {
     await ProjectService.deleteProject(params.id)
     response.status(200).json({ message: 'Project deleted successfully' })
   }
+
+  /**
+   * Ajoute une équipe à un projet.
+   * @param {HttpContext} ctx - The HTTP context containing the request and response objects
+   * @param {HttpContext['response']} ctx.response - The HTTP response object
+   * @param {HttpContext['params']} ctx.params - The HTTP params object
+   * @returns {Promise<void>} - A promise that resolves with no return value
+   */
+  public async addTeamToProject({ params, response }: HttpContext): Promise<void> {
+    const project: Project = await ProjectService.addTeamToProject(Number(params.project_id), Number(params.team_id))
+    return response.ok(project)
+  }
+
+  /**
+   * Retire une équipe d'un projet.
+   * @param {HttpContext} ctx - The HTTP context containing the request and response objects
+   * @param {HttpContext['response']} ctx.response - The HTTP response object
+   * @param {HttpContext['params']} ctx.params - The HTTP params object
+   * @returns {Promise<void>} - A promise that resolves with no return value
+   */
+  public async removeTeamFromProject({ params, response }: HttpContext): Promise<void> {
+    const project: Project = await ProjectService.removeTeamFromProject(
+      Number(params.project_id),
+      Number(params.team_id),
+    )
+    return response.ok(project)
+  }
 }

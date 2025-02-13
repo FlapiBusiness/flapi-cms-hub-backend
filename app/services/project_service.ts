@@ -5,6 +5,7 @@ import env from '#start/env'
 import Project from '#models/project'
 import User from '#models/user'
 import Database from '#models/database'
+import Team from '#models/team'
 
 /**
  * Service to handle project operations
@@ -134,5 +135,30 @@ export default class ProjectService {
       logger.error(error)
       throw error
     }
+  }
+
+  /**
+   * Ajoute une équipe à un projet.
+   * @param {number} projectId - L'ID du projet
+   * @param {number} teamId - L'ID de l'équipe à ajouter
+   * @returns {Promise<Project>} Le projet mis à jour
+   */
+  public static async addTeamToProject(projectId: number, teamId: number): Promise<Project> {
+    const project: Project = await Project.findOrFail(projectId)
+    await Team.findOrFail(teamId)
+    await project.related('teams').attach([teamId])
+    return project
+  }
+
+  /**
+   * Retire une équipe d'un projet.
+   * @param {number} projectId - L'ID du projet
+   * @param {number} teamId - L'ID de l'équipe à retirer
+   * @returns {Promise<Project>} Le projet mis à jour
+   */
+  public static async removeTeamFromProject(projectId: number, teamId: number): Promise<Project> {
+    const project: Project = await Project.findOrFail(projectId)
+    await project.related('teams').detach([teamId])
+    return project
   }
 }
