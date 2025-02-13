@@ -9,7 +9,7 @@ export default class TeamService {
    * Get all teams
    * @returns {Promise<Team[]>} - A promise that resolves with an array of teams
    */
-  public async getAllTeams(): Promise<Team[]> {
+  public static async getAllTeams(): Promise<Team[]> {
     return Team.all()
   }
 
@@ -18,8 +18,8 @@ export default class TeamService {
    * @param {number} teamId - The ID of the team
    * @returns {Promise<Team>} - A promise that resolves with the team
    */
-  public async getTeamById(teamId: number): Promise<Team> {
-    return Team.findOrFail(teamId)
+  public static async getTeamById(teamId: number): Promise<Team> {
+    return await Team.query().where('id', teamId).preload('users').firstOrFail()
   }
 
   /**
@@ -29,7 +29,7 @@ export default class TeamService {
    * @param {string} data.description - The description of the team
    * @returns {Promise<Team>} - A promise that resolves with the created team
    */
-  public async createTeam(data: { name: string; description?: string }): Promise<Team> {
+  public static async createTeam(data: { name: string; description?: string }): Promise<Team> {
     const team: Team = new Team()
     team.name = data.name
     team.description = data.description
@@ -45,7 +45,7 @@ export default class TeamService {
    * @param {string} data.description - The new description of the team
    * @returns {Promise<Team>} - A promise that resolves with the updated team
    */
-  public async updateTeam(teamId: number, data: { name?: string; description?: string }): Promise<Team> {
+  public static async updateTeam(teamId: number, data: { name?: string; description?: string }): Promise<Team> {
     const team: Team = await Team.findOrFail(teamId)
     await team
       .merge({
@@ -60,7 +60,7 @@ export default class TeamService {
    * Delete a team
    * @param {number} teamId - The ID of the team
    */
-  public async deleteTeam(teamId: number): Promise<void> {
+  public static async deleteTeam(teamId: number): Promise<void> {
     const team: Team = await Team.findOrFail(teamId)
     await team.delete()
   }
@@ -72,7 +72,7 @@ export default class TeamService {
    * @param {string} role - The role of the user in the team
    * @returns {Promise<Team>} - A promise that resolves with the updated team
    */
-  public async addUserToTeam(teamId: number, userId: number, role: string = 'member'): Promise<Team> {
+  public static async addUserToTeam(teamId: number, userId: number, role: string = 'member'): Promise<Team> {
     const team: Team = await Team.findOrFail(teamId)
     await User.findOrFail(userId)
     await team.related('users').attach({ [userId]: { role } })
@@ -85,9 +85,22 @@ export default class TeamService {
    * @param {number} userId - The ID of the user
    * @returns {Promise<Team>} - A promise that resolves with the updated team
    */
-  public async removeUserFromTeam(teamId: number, userId: number): Promise<Team> {
+  public static async removeUserFromTeam(teamId: number, userId: number): Promise<Team> {
     const team: Team = await Team.findOrFail(teamId)
     await team.related('users').detach([userId])
+    return team
+  }
+
+  /**
+   * Update the role of a user in a team.
+   * @param {number} teamId - The ID of the team
+   * @param {number} userId - The ID of the user
+   * @param {string} newRole - The new role of the user in the team
+   * @returns {Promise<Team>} - A promise that resolves with the updated team
+   */
+  public static async updateUserRole(teamId: number, userId: number, newRole: string): Promise<Team> {
+    const team: Team = await Team.findOrFail(teamId)
+    await team.related('users').sync({ [userId]: { role: newRole } }, false)
     return team
   }
 }
