@@ -5,6 +5,7 @@ import logger from '@adonisjs/core/services/logger'
 import MailService from '#services/mail_service'
 import env from '#start/env'
 import BadRequestException from '#exceptions/bad_request_exception'
+import KeycloakAdminService from '#services/keycloack_admin_service'
 
 /**
  * Service to handle user sign up operations
@@ -18,8 +19,16 @@ export default class AuthService {
    */
   public static async signUp(data: SignUpPayload): Promise<void> {
     try {
+      const keycloakUserId: number = await KeycloakAdminService.createUser(
+        data.email,
+        data.password,
+        data.firstname,
+        data.lastname,
+      )
+
       const user: User = await User.create({
         roleId: data.role_id,
+        keycloakUserId: keycloakUserId,
         lastname: data.lastname,
         firstname: data.firstname,
         email: data.email,
@@ -53,7 +62,7 @@ export default class AuthService {
       // Vérifier les identifiants (email et mot de passe)
       const user: User = await User.verifyCredentials(payload.email, payload.password)
 
-      // Vérifier si l'utilisateur est actif
+      // Vérifier si l'utilisateur à activer sont compte via le code pin.
       const isActive: boolean = await this.isActive(user.email)
       if (!isActive) {
         throw new Error('User account is inactive, verification code is required')

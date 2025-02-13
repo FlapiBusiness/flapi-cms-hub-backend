@@ -5,7 +5,8 @@ export default class extends BaseSchema {
 
   async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.increments('id').primary().notNullable()
+      table.increments('id').primary().notNullable().unique()
+      table.integer('keycloak_user_id').notNullable().unique()
       table.integer('role_id').unsigned().references('id').inTable('user_roles').notNullable()
       table.string('lastname').notNullable()
       table.string('firstname').notNullable()

@@ -8,19 +8,6 @@ import { createNewApplicationValidator } from '#validators/create_new_applicatio
 import type { CreateNewApplicationPayload } from '#validators/create_new_application_validator'
 
 /**
- * Types pour les inputs du workflow.
- * @type {object} WorkflowInputs
- * @property {string} customerName - Le nom du client.
- * @property {string} projectName - Le nom du projet.
- * @property {string} subdomain - Le sous-domaine.
- */
-type WorkflowInputs = {
-  customerName: string
-  projectName: string
-  subdomain: string
-}
-
-/**
  * Contrôleur pour les actions liées à GitHub.
  * @class ClientController
  */
@@ -58,10 +45,13 @@ export default class ClientController {
 
     const workflowName: string = '.github/workflows/init-update-files-and-push.yaml'
     const workflowBranch: string = 'develop'
-    const workflowInputs: WorkflowInputs = {
+    const workflowInputs: CreateNewApplicationPayload = {
       customerName: payload.customerName,
       projectName: payload.projectName,
       subdomain: payload.subdomain,
+      categoryApp: payload.categoryApp,
+      longDescriptionApp: payload.longDescriptionApp,
+      shortDescriptionApp: payload.shortDescriptionApp,
     }
 
     const environments: string[] = ['dev.', 'staging.', ''] // '' = pour la production
