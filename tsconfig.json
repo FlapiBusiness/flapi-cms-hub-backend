@@ -1,6 +1,6 @@
 {
   "extends": "@adonisjs/tsconfig/tsconfig.app.json",
-  "exclude": ["node_modules", "build", "dist"],
+  "exclude": ["node_modules", "build", "dist", "openapitools"],
   "include": ["**/*.ts"],
   "compilerOptions": {
     "rootDir": "./",

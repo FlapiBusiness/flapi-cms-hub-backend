@@ -32,10 +32,9 @@ export default {
 
   // Composants communs
   common: {
-    parameters: {},
+    parameters: null,
     headers: {},
   },
-
   // Schémas de sécurité
   securitySchemes: {
     BearerAuth: {

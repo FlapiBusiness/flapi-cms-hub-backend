@@ -1,6 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import AuthService from '#services/auth_service'
-import type { SignUpPayload } from '#validators/signup_validator'
 import { signUpValidator } from '#validators/signup_validator'
 import User from '#models/user'
 import BadRequestException from '#exceptions/bad_request_exception'
@@ -8,21 +7,33 @@ import logger from '@adonisjs/core/services/logger'
 import type { LoginPayload } from '#validators/login_validator'
 import { loginValidator } from '#validators/login_validator'
 import type { AccessToken } from '@adonisjs/auth/access_tokens'
-import type { VerifyCodePayload } from '#validators/verifycode_validator'
 import { verifyCodeValidator } from '#validators/verifycode_validator'
 import type { ResendNewCodePayload } from '#validators/resendnewcode_validator'
 import { resendNewCodeValidator } from '#validators/resendnewcode_validator'
+import type { SignUpPayload, VerifyCodePayload } from '#interfaces/auth_interface'
 
 /**
  * Controller to handle user authentication operations
  */
 export default class AuthController {
   /**
+   * @signUp
+   * @operationId signUp
+   * @tag Auth
+   * @summary Inscription d'un utilisateur
+   * @description Permet d'inscrire un nouvel utilisateur
+   * @requestBody <SignUpPayload>
+   * @content application/json
+   * @responseBody 201 - <MessageResponse>
+   * @responseBody 400 - <MessageResponse>
+   */
+  /**
    * Handle user signup
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
    * @param {HttpContext['request']} ctx.request - The HTTP request object
    * @param {HttpContext['response']} ctx.response - The HTTP response object
    * @returns {Promise<void>} - A promise that resolves with no return value
+   *
    */
   public async signUp({ request, response }: HttpContext): Promise<void> {
     try {
@@ -39,6 +50,18 @@ export default class AuthController {
       throw new BadRequestException()
     }
   }
+
+  /**
+   * @signIn
+   * @operationId signIn
+   * @tag Auth
+   * @summary Connexion d'un utilisateur
+   * @description Permet à un utilisateur de se connecter
+   * @requestBody <loginValidator>
+   * @content application/json
+   * @responseBody 200 - <LoginSuccessResponse>
+   * @responseBody 401 - <MessageResponse>
+   */
 
   /**
    * Handle user login
@@ -63,6 +86,17 @@ export default class AuthController {
       response.unauthorized({ message: 'Authentication failed' })
     }
   }
+
+  /**
+   * @signOut
+   * @operationId signOut
+   * @tag Auth
+   * @summary Déconnexion d'un utilisateur
+   * @description Permet à un utilisateur de se déconnecter
+   * @responseBody 200 - <MessageResponse>
+   * @responseBody 401 - <MessageResponse>
+   * @responseBody 500 - <MessageResponse>
+   */
 
   /**
    * Logout user from all sessions
@@ -96,7 +130,17 @@ export default class AuthController {
   }
 
   /**
-   * Verify user account with code
+   * @verifyCode
+   * @operationId verifyCode
+   * @tag Auth
+   * @summary Vérification du compte utilisateur avec code
+   * @description Permet de vérifier le compte utilisateur avec un code
+   * @requestBody <VerifyCodePayload>
+   * @responseBody 200 - <MessageResponse>
+   * @responseBody 400 - <BadRequestResponse>
+   */
+  /**
+   * Verify a user account with code
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
    * @param {HttpContext['request']} ctx.request - The HTTP request object
    * @param {HttpContext['response']} ctx.response - The HTTP response object
@@ -107,7 +151,17 @@ export default class AuthController {
     await AuthService.verifyCode(payload.email, payload.code)
     response.status(200).json({ message: 'Account is active' })
   }
-
+  /**
+   * @resendNewCodeVerificationAccount
+   * @operationId resendNewCodeVerificationAccount
+   * @tag Auth
+   * @summary Renvoyer le code de vérification du compte
+   * @description Permet de renvoyer le code de vérification du compte
+   * @requestBody <resendNewCodeValidator>
+   * @responseBody 200 - <MessageResponse>
+   * @responseBody 400 - <MessageResponse>
+   * @responseBody 422 - <ValidationErrorResponse>
+   */
   /**
    * Resend new code verification account
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects

@@ -29,6 +29,12 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare public id: number
 
   /**
+   * The Keycloak user ID associated with the user.
+   */
+  @column()
+  declare public keycloakUserId: number
+
+  /**
    * The role ID associated with the user.
    */
   @column()

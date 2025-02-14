@@ -1,20 +1,19 @@
 import vine from '@vinejs/vine'
+import { domainValidator } from '#validators/domain_validator'
 
 /**
  *  Manual type based on the diagram for typical the validator.
  */
-export type LoginPayload = {
-  email: string
-  password: string
+export type CheckDomainAvailabilityPayload = {
+  domain: string
 }
 
 /**
  * Validation rules for the login form.
  */
 // eslint-disable-next-line @typescript-eslint/typedef
-export const loginValidator = vine.compile(
+export const checkDomainAvailabilityValidator = vine.compile(
   vine.object({
-    email: vine.string().trim().email().toLowerCase(),
-    password: vine.string().minLength(8),
+    domain: domainValidator,
   }),
 )
