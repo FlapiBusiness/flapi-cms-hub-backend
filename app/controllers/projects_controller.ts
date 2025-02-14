@@ -9,6 +9,17 @@ import type Project from '#models/project'
  */
 export default class ProjectsController {
   /**
+   * @createProject
+   * @operationId createProject
+   * @tag Projects
+   * @summary Create a project
+   * @description Create a new project
+   * @requestBody <ProjectPayload>
+   * @content application/json
+   * @responseBody 201 - <MessageResponse>
+   * @responseBody 400 - <MessageResponse>
+   */
+  /**
    * Handle project creation
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
    * @param {HttpContext['request']} ctx.request - The HTTP request object
@@ -25,6 +36,16 @@ export default class ProjectsController {
   }
 
   /**
+   * @getProjects
+   * @operationId getProjects
+   * @tag Projects
+   * @summary Get all projects
+   * @description Get all projects
+   * @content application/json
+   * @responseBody 200 - <Project[]>
+   * @responseBody 400 - <MessageResponse>
+   */
+  /**
    * Get all projects
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
    * @param {HttpContext['response']} ctx.response - The HTTP response object
@@ -34,6 +55,17 @@ export default class ProjectsController {
     response.status(200).json(projects)
   }
 
+  /**
+   * @getProjectById
+   * @operationId getProjectById
+   * @tag Projects
+   * @summary Get a project by ID
+   * @description Get a project by ID
+   * @param <id> <number>
+   * @content application/json
+   * @responseBody 200 - <Project>
+   * @responseBody 400 - <MessageResponse>
+   */
   /**
    * Get a project by ID
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
@@ -46,6 +78,16 @@ export default class ProjectsController {
   }
 
   /**
+     * @getProjectByUserId
+     * @operationId getProjectByUserId
+     * @tag Projects
+     * @summary Get a project by user ID
+     * @description Get a project by user ID
+     * @param <user_id> <number>
+     * @content application/json
+     * @responseBody 200 - <Project[]>
+     * @responseBody 400 - <MessageResponse>
+  /**
    * Get a project by user ID
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
    * @param {HttpContext['response']} ctx.response - The HTTP response object
@@ -56,6 +98,18 @@ export default class ProjectsController {
     response.status(200).json(project)
   }
 
+  /**
+   * @updateProject
+   * @operationId updateProject
+   * @tag Projects
+   * @summary Update a project
+   * @description Update a project
+   * @param <id> <number>
+   * @requestBody <UpdateProjectPayload>
+   * @content application/json
+   * @responseBody 200 - <MessageResponse>
+   * @responseBody 400 - <MessageResponse>
+   */
   /**
    * Update a project
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
@@ -69,6 +123,17 @@ export default class ProjectsController {
     response.status(200).json({ message: 'Project updated successfully' })
   }
 
+  /**
+   * @deleteProject
+   * @operationId deleteProject
+   * @tag Projects
+   * @summary Delete a project
+   * @description Delete a project
+   * @param <id> <number>
+   * @content application/json
+   * @responseBody 200 - <MessageResponse>
+   * @responseBody 400 - <MessageResponse>
+   */
   /**
    * Delete a project
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
