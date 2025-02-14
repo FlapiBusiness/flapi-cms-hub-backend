@@ -24,3 +24,6 @@ swagger.yml
 
 # Environment
 .env.keys
+
+openapitools.json
+openapitools/api

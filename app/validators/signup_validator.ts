@@ -4,21 +4,7 @@ import type UserRole from '#models/user_role'
 import type User from '#models/user'
 
 /**
- * Type manuel basé sur le schéma
- */
-export type SignUpPayload = {
-  role_id: number
-  lastname: string
-  firstname: string
-  email: string
-  password: string
-  ip_address: string
-  ip_region: string
-  currency_code: string
-}
-
-/**
- * Validation rules for the sign up form.
+ * Validation rules for the sign-up form.
  */
 // eslint-disable-next-line @typescript-eslint/typedef
 export const signUpValidator = vine.compile(

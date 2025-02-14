@@ -27,16 +27,17 @@ type WorkflowInputs = {
 export default class ClientController {
   /**
    * @createNewApplication
+   * @operationId createNewApplication
    * @tag Client
    * @summary Créer une nouvelle application
    * @description Crée un repository GitHub à partir d'un template.
    * @requestBody <createNewApplicationValidator>
    * @conent application/json
-   * @responseBody 201 - {"success": true, "message": "Les repositories ont été créés avec succès et les workflows ont été déclenchés."}
-   * @responseBody 400 - {"success": false, "message": "Le sous-domaine est déjà utilisé."}
-   * @responseBody 500 - {"success": false, "message": "Impossible de créer le repository."}
-   * @responseBody 500 - {"success": false, "message": "Le déclenchement du workflow a échoué.", "error": "Error message"}
-   * @responseBody 500 - {"success": false, "message": "Une erreur est survenue lors de la création du repository.", "error": "Error message"}
+   * @responseBody 201 - <ResultMessageResponse>
+   * @responseBody 400 - <ResultMessageResponse>
+   * @responseBody 500 - <ResultMessageResponse>
+   * @responseBody 500 - <ResultMessageResponse>
+   * @responseBody 500 - <ResultMessageResponse>
    */
   /**
    * Crée un repository GitHub à partir d'un template.

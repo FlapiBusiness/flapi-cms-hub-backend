@@ -9,12 +9,13 @@ import type { HealthCheckReport } from '@adonisjs/health/types'
 export default class HealthController {
   /**
    * @health
+   * @operationId health
    * @tag Health
    * @summary Check the health of the application
    * @description Check the health of the application
    * @responseBody 200 - <HealthCheckReport> - The application is healthy
    * @responseBody 503 - The application is unhealthy
-   * @responseBody 401 - {"message": "Unauthorized access"}
+   * @responseBody 401 - <MessageResponse>
    */
   /**
    * Handle the request

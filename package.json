@@ -22,7 +22,8 @@
     "db:truncate": "node ace db:truncate",
     "db:wipe": "node ace db:wipe",
     "db:fresh": "node ace migration:fresh --seed",
-    "swagger:generate": "node ace swagger:docs:generate",
+    "generate:swagger": "node ace swagger:docs:generate",
+    "generate:openapitools": "npm run generate:swagger && openapi-generator-cli generate -i swagger.json -g typescript-axios -o ./openapitools/api -t ./openapitools/static-template",
     "env:get:dev": "cross-env NODE_ENV=development node ace crypt:get",
     "env:get:dev-remote": "cross-env NODE_ENV=development-remote node ace crypt:get",
     "env:get:staging": "cross-env NODE_ENV=staging node ace crypt:get",
@@ -38,7 +39,7 @@
     "lint:ts": "tsc --noEmit",
     "lint:eslint": "eslint .",
     "lint:fix": "prettier --write --list-different . && npm run lint:prettier --fix && npm run lint:eslint --fix",
-    "postbuild": "npm run swagger:generate && cp -a swagger.yml build/",
+    "postbuild": "npm run generate:swagger && cp -a swagger.yml build/",
     "prepare": "husky"
   },
   "dependencies": {
@@ -62,7 +63,8 @@
     "mysql2": "^3.12.0",
     "node-mailjet": "^6.0.6",
     "pino-pretty": "^13.0.0",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "tsx": "^4.19.2"
   },
   "devDependencies": {
     "@adonisjs/assembler": "^7.8.2",
@@ -79,6 +81,7 @@
     "@japa/plugin-adonisjs": "^4.0.0",
     "@japa/runner": "^4.2.0",
     "@japa/snapshot": "^2.0.8",
+    "@openapitools/openapi-generator-cli": "^2.16.3",
     "@stylistic/eslint-plugin": "^3.0.1",
     "@swc/core": "^1.10.12",
     "@types/luxon": "^3.4.2",
@@ -120,8 +123,8 @@
     "node": ">=22.11.0"
   },
   "imports": {
-    "#interfaces/*": " ./app/interfaces/*.js",
     "#controllers/*": "./app/controllers/*.js",
+    "#interfaces/*": "./app/interfaces/*.js",
     "#exceptions/*": "./app/exceptions/*.js",
     "#models/*": "./app/models/*.js",
     "#mails/*": "./app/mails/*.js",
@@ -139,6 +142,7 @@
     "#config/*": "./config/*.js",
     "#enums/*": "./app/enums/*.js",
     "#dto/*": "./app/dto/*.js",
-    "#types/*": "./app/types/*.js"
+    "#types/*": "./app/types/*.js",
+    "#scripts/*": "./scripts/*.js"
   }
 }

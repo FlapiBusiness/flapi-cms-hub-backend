@@ -13,13 +13,15 @@ import type { CheckSubDomainAvailabilityPayload } from '#validators/check_sub_do
 export default class AWSDomainController {
   /**
    * @checkDomainAvailability
+   * @operationId checkDomainAvailability
    * @tag AWS Domain
    * @summary Vérifie la disponibilité d'un domaine
    * @description Vérifie si un domaine est disponible via AWS Route 53 Domains
    * @requestBody <checkDomainAvailabilityValidator>
+   * @required domain
    * @content application/json
-   * @responseBody 200 - {"domain": "example.com", "isAvailable": true}
-   * @responseBody 500 - {"message": "Erreur lors de la vérification de la disponibilité du domaine."}
+   * @responseBody 200 - <AwsDomainResponse>
+   * @responseBody 500 - <MessageResponse>
    */
   /**
    * Vérifie si un domaine est disponible via AWS Route 53 Domains.
@@ -39,13 +41,14 @@ export default class AWSDomainController {
 
   /**
    * @checkSubDomainAvailability
+   * @operationId checkSubDomainAvailability
    * @tag AWS Domain
    * @summary Vérifie la disponibilité d'un sous-domaine
    * @description Vérifie si un sous-domaine est disponible via AWS Route 53 Domains
    * @requestBody <checkSubDomainAvailabilityValidator>
    * @content application/json
-   * @responseBody 200 - {"subdomain": "sub", "isAvailable": true}
-   * @responseBody 500 - {"message": "Erreur lors de la vérification de la disponibilité du domaine."
+   * @responseBody 200 - <AwsSubDomainResponse>
+   * @responseBody 500 - <MessageResponse>
    */
   /**
    * Vérifie si un sous domaine est disponible via AWS Route 53 Domains.
