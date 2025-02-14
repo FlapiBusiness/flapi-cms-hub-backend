@@ -1,6 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import AuthService from '#services/auth_service'
-import type { SignUpPayload } from '#validators/signup_validator'
 import { signUpValidator } from '#validators/signup_validator'
 import User from '#models/user'
 import BadRequestException from '#exceptions/bad_request_exception'
@@ -8,10 +7,10 @@ import logger from '@adonisjs/core/services/logger'
 import type { LoginPayload } from '#validators/login_validator'
 import { loginValidator } from '#validators/login_validator'
 import type { AccessToken } from '@adonisjs/auth/access_tokens'
-import type { VerifyCodePayload } from '#validators/verifycode_validator'
 import { verifyCodeValidator } from '#validators/verifycode_validator'
 import type { ResendNewCodePayload } from '#validators/resendnewcode_validator'
 import { resendNewCodeValidator } from '#validators/resendnewcode_validator'
+import type { SignUpPayload, VerifyCodePayload } from '#interfaces/auth_interface'
 
 /**
  * Controller to handle user authentication operations
@@ -19,12 +18,14 @@ import { resendNewCodeValidator } from '#validators/resendnewcode_validator'
 export default class AuthController {
   /**
    * @signUp
+   * @operationId signUp
    * @tag Auth
    * @summary Inscription d'un utilisateur
    * @description Permet d'inscrire un nouvel utilisateur
-   * @requestBody <signUpValidator>
-   * @responseBody 201 - {"message": "Account created successfully"}
-   * @responseBody 400 - {"message": "Bad Request"}
+   * @requestBody <SignUpPayload>
+   * @content application/json
+   * @responseBody 201 - <MessageResponse>
+   * @responseBody 400 - <MessageResponse>
    */
   /**
    * Handle user signup
@@ -52,13 +53,14 @@ export default class AuthController {
 
   /**
    * @signIn
+   * @operationId signIn
    * @tag Auth
    * @summary Connexion d'un utilisateur
    * @description Permet à un utilisateur de se connecter
    * @requestBody <loginValidator>
    * @content application/json
    * @responseBody 200 - <LoginSuccessResponse>
-   * @responseBody 401 - {"message": "Authentication failed"}
+   * @responseBody 401 - <MessageResponse>
    */
 
   /**
@@ -87,12 +89,13 @@ export default class AuthController {
 
   /**
    * @signOut
+   * @operationId signOut
    * @tag Auth
    * @summary Déconnexion d'un utilisateur
    * @description Permet à un utilisateur de se déconnecter
-   * @responseBody 200 - {"message": "Logged out from all sessions"}
-   * @responseBody 401 - {"message": "No active session found"}
-   * @responseBody 500 - {"message": "Unable to logout"}
+   * @responseBody 200 - <MessageResponse>
+   * @responseBody 401 - <MessageResponse>
+   * @responseBody 500 - <MessageResponse>
    */
 
   /**
@@ -128,12 +131,13 @@ export default class AuthController {
 
   /**
    * @verifyCode
+   * @operationId verifyCode
    * @tag Auth
    * @summary Vérification du compte utilisateur avec code
    * @description Permet de vérifier le compte utilisateur avec un code
-   * @requestBody <verifyCodeValidator>
-   * @responseBody 200 - {"message": "Account is active"}
-   * @responseBody 400 - {"code": "E_BAD_REQUEST", "message": "Invalid code"}
+   * @requestBody <VerifyCodePayload>
+   * @responseBody 200 - <MessageResponse>
+   * @responseBody 400 - <BadRequestResponse>
    */
   /**
    * Verify a user account with code
@@ -147,16 +151,16 @@ export default class AuthController {
     await AuthService.verifyCode(payload.email, payload.code)
     response.status(200).json({ message: 'Account is active' })
   }
-
   /**
    * @resendNewCodeVerificationAccount
+   * @operationId resendNewCodeVerificationAccount
    * @tag Auth
    * @summary Renvoyer le code de vérification du compte
    * @description Permet de renvoyer le code de vérification du compte
    * @requestBody <resendNewCodeValidator>
-   * @responseBody 200 - {"message": "New code sent"}
-   * @responseBody 422 - {"errors":[{"message": "The email field must be a valid email address", "rule": "email", "field": "email"} ] }
-   * responseBody 400- {"message": "Row not found"}
+   * @responseBody 200 - <MessageResponse>
+   * @responseBody 400 - <MessageResponse>
+   * @responseBody 422 - <ValidationErrorResponse>
    */
   /**
    * Resend new code verification account

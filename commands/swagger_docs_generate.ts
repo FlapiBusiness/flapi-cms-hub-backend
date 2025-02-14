@@ -3,6 +3,7 @@ import type { CommandOptions } from '@adonisjs/core/types/ace'
 import AutoSwagger from 'adonis-autoswagger'
 import swagger from '#config/swagger'
 import type { HttpRouterService } from '@adonisjs/core/types'
+import { fixSwaggerJsonFile } from '#scripts/fix-swagger'
 
 /**
  * Commande pour générer le fichier swagger.yml
@@ -30,6 +31,7 @@ export default class DocsGenerate extends BaseCommand {
 
     // Génère le fichier swagger.yml
     await AutoSwagger.default.writeFile(Router.toJSON(), swagger)
+    fixSwaggerJsonFile()
     this.logger.info('Swagger documentation generated successfully.')
   }
 }

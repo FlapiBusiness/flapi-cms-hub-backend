@@ -1,5 +1,5 @@
 import User from '#models/user'
-import type { SignUpPayload } from '#validators/signup_validator'
+import type { SignUpPayload } from '#interfaces/auth_interface'
 import type { LoginPayload } from '#validators/login_validator'
 import logger from '@adonisjs/core/services/logger'
 import MailService from '#services/mail_service'
