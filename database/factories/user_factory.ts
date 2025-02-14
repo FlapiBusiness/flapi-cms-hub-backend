@@ -16,6 +16,7 @@ export const UserFactory = factory
       isActive: faker.datatype.boolean(),
       activeCode: faker.number.int({ min: 100000, max: 999999 }), // Code numérique à 6 chiffres
       stripeCustomerId: null, // ID client Stripe aléatoire
+      keycloak_user_id: faker.number.int({ min: 100000, max: 999999 }), // ID utilisateur Keycloak aléatoire
       createdAt: DateTime.fromJSDate(faker.date.recent()),
       updatedAt: DateTime.fromJSDate(faker.date.recent()),
     }
