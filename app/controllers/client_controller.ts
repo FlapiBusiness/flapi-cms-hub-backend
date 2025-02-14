@@ -3,9 +3,9 @@ import { GitHubService, delay } from '#services/github_service'
 import logger from '@adonisjs/core/services/logger'
 import O2SwitchService from '#services/o2switch_service'
 import AWSDomainService from '#services/aws_domain_service'
-import env from '#start/env'
 import { createNewApplicationValidator } from '#validators/create_new_application_validator'
 import type { CreateNewApplicationPayload } from '#validators/create_new_application_validator'
+import env from '#start/env'
 
 /**
  * Contrôleur pour les actions liées à GitHub.
@@ -34,7 +34,6 @@ export default class ClientController {
   public async createNewApplication({ request, response }: HttpContext): Promise<void> {
     const payload: CreateNewApplicationPayload = await createNewApplicationValidator.validate(request.all())
 
-    // Variables
     const templateRepoFrontend: string = 'flapi-starterkit-frontend'
     const templateRepoBackend: string = 'flapi-starterkit-backend'
 
@@ -46,14 +45,7 @@ export default class ClientController {
 
     const workflowName: string = '.github/workflows/init-update-files-and-push.yaml'
     const workflowBranch: string = 'develop'
-    const workflowInputs: CreateNewApplicationPayload = {
-      customerName: payload.customerName,
-      projectName: payload.projectName,
-      subdomain: payload.subdomain,
-      categoryApp: payload.categoryApp,
-      longDescriptionApp: payload.longDescriptionApp,
-      shortDescriptionApp: payload.shortDescriptionApp,
-    }
+    const workflowInputs: CreateNewApplicationPayload = payload
 
     const environments: string[] = ['dev.', 'staging.', ''] // '' = pour la production
     const suffixes: string[] = ['', '.api']
@@ -62,31 +54,22 @@ export default class ClientController {
       // Étape 1 : Vérifier si les sous-domaines existent déjà
       for (const environment of environments) {
         for (const suffix of suffixes) {
-          const subdomain2: string = `${environment}${payload.subdomain}${suffix}`
-          const subdomainExists: boolean = await AWSDomainService.checkSubdomainAvailability(
-            env.get('AWS_DOMAIN_FLAPI_HOSTED_ZONE_ID'),
-            subdomain2,
-            env.get('AWS_DOMAIN_FLAPI'),
-          )
+          const subdomain: string = `${environment}${AWSDomainService.extractSubdomain(payload.fullDomain)}${suffix}.${env.get('AWS_DOMAIN_FLAPI')}`
+          const subdomainExists: boolean = await AWSDomainService.checkSubdomainAvailability(subdomain)
           if (subdomainExists) {
             response.status(400).json({
               success: false,
-              message: `Le sous-domaine "${subdomain2}.${env.get('AWS_DOMAIN_FLAPI')}" est déjà utilisé.`,
+              message: `Le sous-domaine ${subdomain} est deja utiliser.`,
             })
           }
         }
       }
 
-      // Étape 2 : Créer les sous-domaines sur AWS
+      // Étape 2 : Créer les sous-domaines sur AWS pour les environnements dev, staging et prod
       for (const environment of environments) {
-        // Créer le sous-domaine principal pour les environnements dev et staging
         for (const suffix of suffixes) {
-          const subdomain2: string = `${environment}${payload.subdomain}${suffix}`
-          await AWSDomainService.createSubdomain(
-            env.get('AWS_DOMAIN_FLAPI_HOSTED_ZONE_ID'),
-            subdomain2,
-            env.get('AWS_DOMAIN_FLAPI'),
-          )
+          const subdomain: string = `${environment}${AWSDomainService.extractSubdomain(payload.fullDomain)}${suffix}.${env.get('AWS_DOMAIN_FLAPI')}`
+          await AWSDomainService.createSubdomain(subdomain)
         }
       }
 
@@ -111,7 +94,7 @@ export default class ClientController {
         if (!isCreated) {
           response.status(500).json({
             success: false,
-            message: `Impossible de créer le repository "${repo.name}".`,
+            message: `Impossible de creer le repository "${repo.name}".`,
           })
         }
       }
@@ -120,6 +103,8 @@ export default class ClientController {
       await delay(15000)
 
       // Étape 5 : Déclencher les workflows
+      GitHubService.listWorkflows(newRepoNameFrontend)
+      GitHubService.listWorkflows(newRepoNameBackend)
       for (const repo of repositories) {
         const workflowTriggered: boolean = await GitHubService.triggerWorkflow(
           repo.template,
@@ -130,7 +115,7 @@ export default class ClientController {
         if (!workflowTriggered) {
           response.status(500).json({
             success: false,
-            message: `Le déclenchement du workflow pour le repository "${repo.name}" a échoué.`,
+            message: `Le declenchement du workflow pour le repository "${repo.name}" a echouer.`,
           })
         }
       }
@@ -138,7 +123,7 @@ export default class ClientController {
       // Succès
       response.status(201).json({
         success: true,
-        message: `Les repositories "${newRepoNameFrontend}" et "${newRepoNameBackend}" ont été créés avec succès et les workflows ont été déclenchés.`,
+        message: `Les repositories "${newRepoNameFrontend}" et "${newRepoNameBackend}" ont ete crees avec succes et les workflows ont été declenches.`,
       })
     } catch (error) {
       logger.error('Erreur dans GitHubController :', {
@@ -148,7 +133,7 @@ export default class ClientController {
       })
       response.status(500).json({
         success: false,
-        message: 'Une erreur est survenue lors de la création du repository.',
+        message: 'Une erreur est survenue lors de la creation du repository.',
         error: error.message,
       })
     }

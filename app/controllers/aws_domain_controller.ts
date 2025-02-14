@@ -20,8 +20,8 @@ export default class AWSDomainController {
    * @requestBody <checkDomainAvailabilityValidator>
    * @required domain
    * @content application/json
-   * @responseBody 200 - <AwsDomainResponse>
-   * @responseBody 500 - <MessageResponse>
+   * @responseBody 200 - { "domainExist": false }
+   * @responseBody 500 - { "message": "Erreur lors de la vérification de la disponibilité du domaine." }
    */
   /**
    * Vérifie si un domaine est disponible via AWS Route 53 Domains.
@@ -30,9 +30,10 @@ export default class AWSDomainController {
    */
   public async checkDomainAvailability({ request, response }: HttpContext): Promise<void> {
     const payload: CheckDomainAvailabilityPayload = await checkDomainAvailabilityValidator.validate(request.all())
+
     try {
-      const isAvailable: boolean = await AWSDomainService.checkDomainAvailability(payload.domain)
-      response.status(200).json({ domain: payload.domain, isAvailable })
+      const domainExist: boolean = await AWSDomainService.checkDomainAvailability(payload.domain)
+      response.status(200).json({ domainExist })
     } catch (error) {
       logger.error('Erreur lors de la vérification du domaine:', error)
       response.status(500).json({ message: 'Erreur lors de la vérification de la disponibilité du domaine.' })
@@ -47,8 +48,8 @@ export default class AWSDomainController {
    * @description Vérifie si un sous-domaine est disponible via AWS Route 53 Domains
    * @requestBody <checkSubDomainAvailabilityValidator>
    * @content application/json
-   * @responseBody 200 - <AwsSubDomainResponse>
-   * @responseBody 500 - <MessageResponse>
+   * @responseBody 200 - { subdomainExist: true }
+   * @responseBody 500 - {"message": "Erreur lors de la vérification de la disponibilité du domaine."
    */
   /**
    * Vérifie si un sous domaine est disponible via AWS Route 53 Domains.
@@ -59,12 +60,8 @@ export default class AWSDomainController {
     const payload: CheckSubDomainAvailabilityPayload = await checkSubDomainAvailabilityValidator.validate(request.all())
 
     try {
-      const isAvailable: boolean = await AWSDomainService.checkSubdomainAvailability(
-        payload.hostedZoneId,
-        payload.subdomain,
-        payload.domain,
-      )
-      response.status(200).json({ subdomain: payload.subdomain, isAvailable })
+      const subdomainExist: boolean = await AWSDomainService.checkSubdomainAvailability(payload.subdomain)
+      response.status(200).json({ subdomainExist })
     } catch (error) {
       logger.error('Erreur lors de la vérification du domaine:', error)
       response.status(500).json({ message: 'Erreur lors de la vérification de la disponibilité du domaine.' })

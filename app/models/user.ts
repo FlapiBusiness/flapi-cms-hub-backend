@@ -43,7 +43,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   /**
    * The relationship to the Role model.
    */
-  @belongsTo((): typeof UserRole => UserRole)
+  @belongsTo(() => UserRole, {
+    foreignKey: 'roleId',
+  })
   declare public role: BelongsTo<typeof UserRole>
 
   /**
