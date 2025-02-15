@@ -20,8 +20,8 @@ export default class AWSDomainController {
    * @requestBody <checkDomainAvailabilityValidator>
    * @required domain
    * @content application/json
-   * @responseBody 200 - { "domainExist": false }
-   * @responseBody 500 - { "message": "Erreur lors de la vérification de la disponibilité du domaine." }
+   * @responseBody 200 - <AwsDomainResponse>
+   * @responseBody 500 - <ResultMessageResponse>
    */
   /**
    * Vérifie si un domaine est disponible via AWS Route 53 Domains.
@@ -48,8 +48,8 @@ export default class AWSDomainController {
    * @description Vérifie si un sous-domaine est disponible via AWS Route 53 Domains
    * @requestBody <checkSubDomainAvailabilityValidator>
    * @content application/json
-   * @responseBody 200 - { subdomainExist: true }
-   * @responseBody 500 - {"message": "Erreur lors de la vérification de la disponibilité du domaine."
+   * @responseBody 200 - <AwsDomainResponse>
+   * @responseBody 500 - <ResultMessageResponse>
    */
   /**
    * Vérifie si un sous domaine est disponible via AWS Route 53 Domains.
