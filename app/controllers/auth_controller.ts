@@ -7,10 +7,7 @@ import logger from '@adonisjs/core/services/logger'
 import type { LoginPayload } from '#validators/login_validator'
 import { loginValidator } from '#validators/login_validator'
 import type { AccessToken } from '@adonisjs/auth/access_tokens'
-import { verifyCodeValidator } from '#validators/verifycode_validator'
-import type { ResendNewCodePayload } from '#validators/resendnewcode_validator'
-import { resendNewCodeValidator } from '#validators/resendnewcode_validator'
-import type { SignUpPayload, VerifyCodePayload } from '#interfaces/auth_interface'
+import type { SignUpPayload } from '#interfaces/auth_interface'
 
 /**
  * Controller to handle user authentication operations
@@ -67,7 +64,6 @@ export default class AuthController {
    * @responseBody 200 - <LoginSuccessResponse>
    * @responseBody 401 - <MessageResponse>
    */
-
   /**
    * Handle user login
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
@@ -102,7 +98,6 @@ export default class AuthController {
    * @responseBody 401 - <MessageResponse>
    * @responseBody 500 - <MessageResponse>
    */
-
   /**
    * Logout user from all sessions
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
@@ -132,51 +127,5 @@ export default class AuthController {
       logger.error(error)
       response.internalServerError({ message: 'Unable to logout' })
     }
-  }
-
-  /**
-   * @verifyCode
-   * @operationId verifyCode
-   * @tag Auth
-   * @summary Vérification du compte utilisateur avec code
-   * @description Permet de vérifier le compte utilisateur avec un code
-   * @requestBody <VerifyCodePayload>
-   * @responseBody 200 - <MessageResponse>
-   * @responseBody 400 - <BadRequestResponse>
-   */
-  /**
-   * Verify a user account with code
-   * @param {HttpContext} ctx - The HTTP context containing the request and response objects
-   * @param {HttpContext['request']} ctx.request - The HTTP request object
-   * @param {HttpContext['response']} ctx.response - The HTTP response object
-   * @returns {Promise<void>} - A promise that resolves with no return value
-   */
-  public async verifyCode({ request, response }: HttpContext): Promise<void> {
-    const payload: VerifyCodePayload = await verifyCodeValidator.validate(request.all())
-    await AuthService.verifyCode(payload.email, payload.code)
-    response.status(200).json({ message: 'Account is active' })
-  }
-  /**
-   * @resendNewCodeVerificationAccount
-   * @operationId resendNewCodeVerificationAccount
-   * @tag Auth
-   * @summary Renvoyer le code de vérification du compte
-   * @description Permet de renvoyer le code de vérification du compte
-   * @requestBody <resendNewCodeValidator>
-   * @responseBody 200 - <MessageResponse>
-   * @responseBody 400 - <MessageResponse>
-   * @responseBody 422 - <ValidationErrorResponse>
-   */
-  /**
-   * Resend new code verification account
-   * @param {HttpContext} ctx - The HTTP context containing the request and response objects
-   * @param {HttpContext['request']} ctx.request - The HTTP request object
-   * @param {HttpContext['response']} ctx.response - The HTTP response object
-   * @returns {Promise<any>} - A promise that resolves with no return value
-   */
-  public async resendNewCodeVerificationAccount({ request, response }: HttpContext): Promise<any> {
-    const payload: ResendNewCodePayload = await resendNewCodeValidator.validate(request.all())
-    await AuthService.resendNewCodeVerificationAccount(payload.email)
-    response.status(200).json({ message: 'New code sent' })
   }
 }

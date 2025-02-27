@@ -7,6 +7,7 @@
  * @property {string} MARKETING - Responsable marketing
  * @property {string} SUPPORT - Assistance client
  * @property {string} COMMERCIAL - Responsable commercial
+ * @property {string} CLIENT - Utilisateur client
  */
 export enum UserRoles {
   SUPER_ADMIN = 'superAdmin',
@@ -15,4 +16,5 @@ export enum UserRoles {
   MARKETING = 'marketing',
   SUPPORT = 'support',
   COMMERCIAL = 'commercial',
+  CLIENT = 'client',
 }

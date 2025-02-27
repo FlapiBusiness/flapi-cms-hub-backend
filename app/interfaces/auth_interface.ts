@@ -5,10 +5,6 @@
  * @property {Date} expiresAt - The expiration date of the token
  */
 export interface LoginSuccessResponse {
-  /**
-   * Token d'authentification de l'utilisateur
-   * @example "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-   */
   token: string
   type: string
   expiresAt: Date
@@ -28,14 +24,4 @@ export interface SignUpPayload {
   email: string
   password: string
   password_confirmation: string
-}
-
-/**
- *  @interface {object} VerifyCodePayload - The payload for verifying the user's account with a code.
- *  @property {string} email - The email address of the user.
- *  @property {number} code - The 6-digit active code for the user.
- */
-export interface VerifyCodePayload {
-  email: string
-  code: number
 }
