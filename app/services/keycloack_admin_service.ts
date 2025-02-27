@@ -83,7 +83,6 @@ export default class KeycloakAdminService {
 
       // Étape 3 : Définition du mot de passe
       await this.kcAdmin.users.resetPassword({
-        realm: env.get('KEYCLOAK_REALM'),
         id: createdUser.id,
         credential: {
           type: 'password',
