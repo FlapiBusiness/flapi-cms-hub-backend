@@ -14,7 +14,7 @@ export const UserFactory = factory
       ipAddress: faker.internet.ip(),
       ipRegion: faker.location.streetAddress(),
       stripeCustomerId: null,
-      keycloak_user_id: faker.number.int({ min: 1, max: 999 }), // ID utilisateur Keycloak aléatoire
+      keycloak_user_id: faker.string.alphanumeric(24), // ID Keycloak simulé (24 caractères alphanumériques)
       createdAt: DateTime.fromJSDate(faker.date.recent()),
       updatedAt: DateTime.fromJSDate(faker.date.recent()),
     }

@@ -5,7 +5,7 @@ import MailService from '#services/mail_service'
 import env from '#start/env'
 import KeycloakAdminService from '#services/keycloack_admin_service'
 import UserRole from '#models/user_role'
-import { LoginPayload } from '#validators/login_validator'
+import type { LoginPayload } from '#validators/login_validator'
 import { UserRoles } from '#enums/user_roles'
 
 /**
@@ -20,7 +20,7 @@ export default class AuthService {
    */
   public static async signUp(data: SignUpPayload): Promise<void> {
     try {
-      const keycloakUserId: number = await KeycloakAdminService.createUser(
+      const keycloakUserId: string = await KeycloakAdminService.createUser(
         data.email,
         data.password,
         data.firstname,
@@ -29,19 +29,13 @@ export default class AuthService {
 
       const defaultRole: UserRole = await UserRole.findByOrFail('name', UserRoles.CLIENT)
 
-      const user: User = await User.create({
+      await User.create({
         roleId: defaultRole.id,
         keycloakUserId: keycloakUserId,
         lastname: data.lastname,
         firstname: data.firstname,
         email: data.email,
         password: data.password, // sera hashé automatiquement
-      })
-
-      await MailService.sendEmail(user.email, 'welcome', 'Welcome to Flapi', {
-        username: user.firstname + ' ' + user.lastname,
-        redirect_uri:
-          env.get('FRONTEND_APP_BASE_URL') + env.get('FRONTEND_APP_REDIRECT_URI_ACCOUNT_VALIDATE') + user.email,
       })
     } catch (error: any) {
       logger.error(error)

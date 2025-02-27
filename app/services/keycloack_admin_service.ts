@@ -52,14 +52,14 @@ export default class KeycloakAdminService {
    * @param {string} password - Mot de passe de l'utilisateur
    * @param {string} firstName - Prénom de l'utilisateur
    * @param {string} lastName - Nom de l'utilisateur
-   * @returns {Promise<number>} - ID de l'utilisateur créé
+   * @returns {Promise<string>} - ID de l'utilisateur créé
    */
   public static async createUser(
     email: string,
     password: string,
     firstName: string,
     lastName: string,
-  ): Promise<number> {
+  ): Promise<string> {
     await this.authenticateAdmin()
 
     try {
@@ -92,7 +92,7 @@ export default class KeycloakAdminService {
       })
 
       logger.info(`Utilisateur cree avec succes: ${email}`)
-      return Number(createdUser.id)
+      return createdUser.id
     } catch (error: any) {
       throw new Error(`Echec de la creation de l utilisateur, erreur Keycloak: ${error.message}`)
     }
