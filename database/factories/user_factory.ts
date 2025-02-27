@@ -13,10 +13,8 @@ export const UserFactory = factory
       currencyCode: faker.helpers.arrayElement(['USD', 'EUR', 'GBP', null]), // Choix aléatoire parmi ces devises ou null
       ipAddress: faker.internet.ip(),
       ipRegion: faker.location.streetAddress(),
-      isActive: faker.datatype.boolean(),
-      activeCode: faker.number.int({ min: 100000, max: 999999 }), // Code numérique à 6 chiffres
       stripeCustomerId: null, // ID client Stripe aléatoire
-      keycloak_user_id: faker.number.int({ min: 100000, max: 999999 }), // ID utilisateur Keycloak aléatoire
+      keycloak_user_id: faker.number.int({ min: 100000, max: 999999 }).toString(),
       createdAt: DateTime.fromJSDate(faker.date.recent()),
       updatedAt: DateTime.fromJSDate(faker.date.recent()),
     }

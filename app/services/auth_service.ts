@@ -5,7 +5,7 @@ import MailService from '#services/mail_service'
 import env from '#start/env'
 import KeycloakAdminService from '#services/keycloack_admin_service'
 import UserRole from '#models/user_role'
-import { LoginPayload } from '#validators/login_validator'
+import type { LoginPayload } from '#validators/login_validator'
 import { UserRoles } from '#enums/user_roles'
 
 /**
@@ -20,7 +20,7 @@ export default class AuthService {
    */
   public static async signUp(data: SignUpPayload): Promise<void> {
     try {
-      const keycloakUserId: number = await KeycloakAdminService.createUser(
+      const keycloakUserId: string = await KeycloakAdminService.createUser(
         data.email,
         data.password,
         data.firstname,
