@@ -26,6 +26,7 @@ export default class AuthController {
    * @content application/json
    * @responseBody 201 - <MessageResponse>
    * @responseBody 400 - <MessageResponse>
+   * @responseBody 400 - <BadValidationRequestResponse>
    */
   /**
    * Handle user signup
@@ -46,8 +47,12 @@ export default class AuthController {
       // Répondre avec succès et renvoyer les données de l'utilisateur
       response.status(201).json({ message: 'Account created successfully' })
     } catch (error: any) {
-      logger.error(error)
-      throw new BadRequestException()
+      // Si c'est une erreur de validation
+      if (error.code === 'E_VALIDATION_ERROR' && error.messages) {
+        throw new BadRequestException({ messages: error.messages })
+      }
+
+      throw new BadRequestException({ message: error.message })
     }
   }
 

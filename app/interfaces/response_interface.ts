@@ -30,6 +30,17 @@ export interface BadRequestResponse {
 }
 
 /**
+ * Interface for the bad validation request response
+ * @interface
+ * @property {string} code - The error code
+ * @property {string[]} messages - The list of error messages
+ */
+export interface BadValidationRequestResponse {
+  code: string
+  messages: string[]
+}
+
+/**
  * Interface for the validation error
  * @interface
  * @property {string} message - The error message

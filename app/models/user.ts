@@ -67,6 +67,12 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare public email: string
 
   /**
+   * The Keycloak user ID associated with the user.
+   */
+  @column()
+  declare public keycloak_user_id: number
+
+  /**
    * The hashed password of the user.
    * This field is hidden in serialized responses.
    */

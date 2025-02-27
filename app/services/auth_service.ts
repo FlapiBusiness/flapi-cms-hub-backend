@@ -27,16 +27,13 @@ export default class AuthService {
       )
 
       const user: User = await User.create({
-        roleId: data.role_id,
         keycloakUserId: keycloakUserId,
         lastname: data.lastname,
         firstname: data.firstname,
         email: data.email,
         password: data.password, // sera hashé automatiquement
-        currencyCode: data.currency_code,
-        ipAddress: data.ip_address,
-        ipRegion: data.ip_region,
         isActive: false,
+        keycloak_user_id: -1, // TODO: à remplacer par l'ID Keycloak
         activeCode: Math.floor(100000 + Math.random() * 900000),
       })
 
