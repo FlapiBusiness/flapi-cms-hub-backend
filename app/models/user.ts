@@ -92,18 +92,6 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare public ipRegion: string | null
 
   /**
-   * Whether the user account is active.
-   */
-  @column()
-  declare public isActive: boolean
-
-  /**
-   * The 6-digit active code for the user.
-   */
-  @column()
-  declare public activeCode: number
-
-  /**
    * The Stripe customer ID associated with the user.
    */
   @column()

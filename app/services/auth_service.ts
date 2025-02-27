@@ -40,7 +40,6 @@ export default class AuthService {
 
       await MailService.sendEmail(user.email, 'welcome', 'Welcome to Flapi', {
         username: user.firstname + ' ' + user.lastname,
-        code: user.activeCode,
         redirect_uri:
           env.get('FRONTEND_APP_BASE_URL') + env.get('FRONTEND_APP_REDIRECT_URI_ACCOUNT_VALIDATE') + user.email,
       })
