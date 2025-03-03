@@ -29,20 +29,13 @@ export default class AuthService {
 
       const defaultRole: UserRole = await UserRole.findByOrFail('name', UserRoles.CLIENT)
 
-      const user: User = await User.create({
+      await User.create({
         roleId: defaultRole.id,
         keycloakUserId: keycloakUserId,
         lastname: data.lastname,
         firstname: data.firstname,
         email: data.email,
         password: data.password, // sera hashé automatiquement
-      })
-
-      await MailService.sendEmail(user.email, 'welcome', 'Welcome to Flapi', {
-        username: user.firstname + ' ' + user.lastname,
-        code: user.activeCode,
-        redirect_uri:
-          env.get('FRONTEND_APP_BASE_URL') + env.get('FRONTEND_APP_REDIRECT_URI_ACCOUNT_VALIDATE') + user.email,
       })
     } catch (error: any) {
       logger.error(error)

@@ -14,6 +14,7 @@ export const signUpValidator = vine.compile(
       .string()
       .normalizeEmail()
       .email()
+      .maxLength(254)
       .unique(async (db: Database, value: string) => {
         const existingUser: User = await db.from('users').where('email', value).first()
         return !existingUser
