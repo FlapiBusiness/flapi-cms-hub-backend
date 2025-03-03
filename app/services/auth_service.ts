@@ -1,11 +1,8 @@
 import User from '#models/user'
 import type { SignUpPayload } from '#interfaces/auth_interface'
 import logger from '@adonisjs/core/services/logger'
-import MailService from '#services/mail_service'
-import env from '#start/env'
 import KeycloakAdminService from '#services/keycloack_admin_service'
 import UserRole from '#models/user_role'
-import type { LoginPayload } from '#validators/login_validator'
 import { UserRoles } from '#enums/user_roles'
 
 /**
@@ -20,42 +17,39 @@ export default class AuthService {
    */
   public static async signUp(data: SignUpPayload): Promise<void> {
     try {
+      /**
+       * Créer un nouvel utilisateur dans Keycloak.
+       * Egalement, ajouter le rôle par défaut ADMIN_CLIENT pour les nouveaux utilisateurs dans Keycloak.
+       */
       const keycloakUserId: string = await KeycloakAdminService.createUser(
         data.email,
         data.password,
         data.firstname,
         data.lastname,
       )
+      // TODO: Voir côté keycloak pour ajouter le rôle ADMIN_CLIENT avant
+      //await KeycloakAdminService.addUserRole(keycloakUserId, UserRoles.ADMIN_CLIENT)
 
-      const defaultRole: UserRole = await UserRole.findByOrFail('name', UserRoles.CLIENT)
+      /**
+       * Si l'utilisateur est créé avec succès dans Keycloak, on peut alors créer l'utilisateur dans la base de données.
+       * On utilise le rôle par défaut ADMIN_CLIENT pour les nouveaux utilisateurs,
+       * qui sont des entreprises qui utilisent Flapi pour gérer leurs clients.
+       */
+      const defaultRole: UserRole = await UserRole.findByOrFail('name', UserRoles.ADMIN_CLIENT)
 
+      /**
+       * Créer un nouvel utilisateur dans la base de données de Flapi.
+       */
       await User.create({
         roleId: defaultRole.id,
         keycloakUserId: keycloakUserId,
         lastname: data.lastname,
         firstname: data.firstname,
         email: data.email,
-        password: data.password, // sera hashé automatiquement
       })
     } catch (error: any) {
       logger.error(error)
       throw error
-    }
-  }
-
-  /**
-   * Authenticate a user with email and password
-   * @param {LoginPayload} payload - The login data
-   * @returns {Promise<User>} - The authenticated user instance
-   */
-  public static async signIn(payload: LoginPayload): Promise<User> {
-    try {
-      // Vérifier les identifiants (email et mot de passe)
-      const user: User = await User.verifyCredentials(payload.email, payload.password)
-      return user
-    } catch (error: any) {
-      logger.error('Error in signIn:', error.message || error)
-      throw new Error(error.message || 'Invalid credentials')
     }
   }
 }

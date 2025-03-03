@@ -114,8 +114,8 @@ git clone git@github.com:FlapiBusiness/flapi-cms-hub-backend.git
 2. Run command :
 
 ```bash
-   # Start the development server on http://localhost:3555 (AdonisJS)
-   # Start the development server on http://localhost:7450 (PhpMyAdmin)
+   # Start the development server on http://localhost:3556 (AdonisJS)
+   # Start the development server on http://localhost:7500 (PhpMyAdmin)
    # Start the development server on http://localhost:8025 (Mailhog)
    # Start MariaDB port is : 3310
    npm install # just for the idea

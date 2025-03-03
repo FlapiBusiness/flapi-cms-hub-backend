@@ -2,8 +2,7 @@ import router from '@adonisjs/core/services/router'
 
 const AuthController = () => import('#controllers/auth_controller')
 
-router.post('/signup', [AuthController, 'signUp'])
-router.post('/signin', [AuthController, 'signIn'])
-router.post('/signout', [AuthController, 'signOut'])
-router.post('/verifycode', [AuthController, 'verifyCode'])
-router.post('/resend-code', [AuthController, 'resendNewCodeVerificationAccount'])
+router.post('/auth/signup', [AuthController, 'signUp'])
+router.post('/auth/signin-callback', [AuthController, 'signinCallback'])
+router.post('/auth/signout', [AuthController, 'signOut'])
+router.get('/auth/check-session', [AuthController, 'checkSessionIsValid'])
