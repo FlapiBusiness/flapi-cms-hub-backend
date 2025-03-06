@@ -6,7 +6,7 @@ export default class CreateUserSessions extends BaseSchema {
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id').primary().unique().notNullable()
-      table.integer('user_id').unique().notNullable().unsigned().references('id').inTable('users').onDelete('CASCADE')
+      table.integer('user_id').notNullable().unsigned().references('id').inTable('users').onDelete('CASCADE')
       table.string('session_state').notNullable() // Stocke l'ID de session Keycloak
       table.string('type').notNullable() // Type de session (ex: Bearer)
       table.string('access_token', 2048).notNullable() // Token d'accès
