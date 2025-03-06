@@ -1,13 +1,11 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import AuthService from '#services/auth_service'
 import { signUpValidator } from '#validators/signup_validator'
-import User from '#models/user'
 import BadRequestException from '#exceptions/bad_request_exception'
 import logger from '@adonisjs/core/services/logger'
-import type { LoginPayload } from '#validators/login_validator'
-import { loginValidator } from '#validators/login_validator'
-import type { AccessToken } from '@adonisjs/auth/access_tokens'
 import type { SignUpPayload } from '#interfaces/auth_interface'
+import KeycloakAdminService from '#services/keycloack_admin_service'
+import type UserSession from '#models/user_session'
 
 /**
  * Controller to handle user authentication operations
@@ -59,32 +57,49 @@ export default class AuthController {
    * @tag Auth
    * @summary Connexion d'un utilisateur
    * @description Permet à un utilisateur de se connecter
-   * @requestBody <loginValidator>
-   * @content application/json
-   * @responseBody 200 - <LoginSuccessResponse>
+   * @responseBody 200 - <MessageResponse>
    * @responseBody 401 - <MessageResponse>
+   * @responseBody 500 - <MessageResponse>
    */
   /**
    * Handle user login
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
+   * @param {HttpContext['auth']} ctx.auth - The authentication object
    * @param {HttpContext['request']} ctx.request - The HTTP request object
    * @param {HttpContext['response']} ctx.response - The HTTP response object
    * @returns {Promise<void>} - A promise that resolves with no return value
    */
-  public async signIn({ request, response }: HttpContext): Promise<void> {
+  public async signinCallback({ request, response }: HttpContext): Promise<void> {
     try {
-      const payload: LoginPayload = await loginValidator.validate(request.all())
-      const user: User = await AuthService.signIn(payload)
-      const token: AccessToken = await User.accessTokens.create(user)
+      const { code, redirect_uri } = request.body()
 
-      response.status(200).json({
-        token: token.value!.release(),
-        type: 'bearer',
-        expiresAt: token.expiresAt,
+      const userSession: UserSession = await KeycloakAdminService.exchangeCodeForTokenAndCreateUserSession(
+        code,
+        redirect_uri,
+      )
+
+      return response.ok({
+        access_token: userSession.accessToken,
       })
     } catch (error) {
-      logger.error(error)
-      response.unauthorized({ message: 'Authentication failed' })
+      return response.internalServerError({ error: error.message })
+    }
+  }
+
+  /**
+   * @checkSession
+   */
+  public async checkSessionIsValid({ request, response }: HttpContext): Promise<void> {
+    const token: string | undefined = request.header('Authorization')?.replace('Bearer ', '')
+    if (!token) {
+      return response.unauthorized({ valid: false, error: 'Token manquant' })
+    }
+
+    try {
+      const isValid: boolean = await KeycloakAdminService.sessionIsValid(token)
+      return response.ok({ valid: isValid })
+    } catch (error: any) {
+      return response.unauthorized({ valid: false, error: error.message })
     }
   }
 
@@ -110,13 +125,8 @@ export default class AuthController {
       // Vérifier si l'utilisateur est authentifié
       if (await auth.use('api').check()) {
         // Récupérer l'utilisateur actuel
-        const user: User & { currentAccessToken: AccessToken } = auth.use('api').user!
 
         // Révoquer tous les tokens de l'utilisateur
-        const tokens: AccessToken[] = await User.accessTokens.all(user)
-        for (const token of tokens) {
-          await User.accessTokens.delete(user, token.identifier)
-        }
 
         // Répondre avec succès
         response.status(200).json({ message: 'Logged out from all sessions' })
