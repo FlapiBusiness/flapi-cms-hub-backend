@@ -31,3 +31,13 @@ router.put('/project/:id', [ProjectController, 'updateProject'])
  * Route pour la suppression d'un projet
  */
 router.delete('/project/:id', [ProjectController, 'deleteProject'])
+
+/**
+ * Route pour l'ajout d'une équipe à un projet
+ */
+router.post('/project/:project_id/team/:team_id', [ProjectController, 'addTeamToProject'])
+
+/**
+ * Route pour la suppression d'une équipe d'un projet
+ */
+router.delete('/project/:project_id/team/:team_id', [ProjectController, 'removeTeamFromProject'])

@@ -1,7 +1,11 @@
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import { BaseModel, belongsTo, column, manyToMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, ManyToMany } from '@adonisjs/lucid/types/relations'
 import UserRole from '#models/user_role'
+import Project from '#models/project'
+import Team from '#models/team'
+import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
+import env from '#start/env'
 
 /**
  * The User model represents a user of the application.
@@ -75,6 +79,22 @@ export default class User extends BaseModel {
   @column()
   declare public stripeCustomerId: number | null
 
+  @manyToMany(() => Team, {
+    pivotTable: 'user_teams',
+    pivotColumns: ['role'],
+  })
+  declare public teams: ManyToMany<typeof Team>
+
+  /**
+   * Relation many-to-many avec les projets via la table pivot 'user_project_permissions'
+   * On récupère ici le champ 'has_access' pour savoir si l'utilisateur a accès au projet.
+   */
+  @manyToMany(() => Project, {
+    pivotTable: 'user_project_permissions',
+    pivotColumns: ['has_access'],
+  })
+  declare public project_permissions: ManyToMany<typeof Project>
+
   /**
    * The timestamp when the user was created.
    */
@@ -86,4 +106,16 @@ export default class User extends BaseModel {
    */
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare public updatedAt: DateTime | null
+
+  /**
+   * The access token provider for the user model.
+   * This provider is used to generate and validate access tokens for the user.
+   */
+  public static accessTokens: DbAccessTokensProvider<typeof User> = DbAccessTokensProvider.forModel(User, {
+    expiresIn: env.get('API_USER_TOKEN_EXPIRATION'),
+    prefix: 'oat_',
+    table: 'auth_access_tokens',
+    type: 'auth_token',
+    tokenSecretLength: env.get('API_USER_TOKEN_SECRET_LENGTH'),
+  })
 }
