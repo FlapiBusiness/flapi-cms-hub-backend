@@ -8,8 +8,9 @@ import './routes/swagger.js'
 import './routes/health.js'
 import './routes/client.js'
 import './routes/auth.js'
-// import './routes/project.js'
-// import './routes/database.js'
+import './routes/project.js'
+import './routes/database.js'
+import './routes/user.js'
 
 /**
  * Cette route est utilisée pour tester le fonctionnement de base de l'application,
