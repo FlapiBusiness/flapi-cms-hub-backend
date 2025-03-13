@@ -50,6 +50,37 @@ export default class KeycloakAdminService {
   }
 
   /**
+   * Récupère l'utilisateur authentifié via son access_token
+   * @param {string} access_token - Le token de l'utilisateur
+   * @returns {Promise<User | null>} - L'utilisateur de la base de données ou null si non trouvé
+   */
+  public static async getAuthenticatedUser(access_token: string): Promise<User | null> {
+    try {
+      // Vérifier et récupérer l'ID Keycloak de l'utilisateur
+      const response: AxiosResponse<any, any> = await this.keycloakAxios.get('/userinfo', {
+        headers: { Authorization: `Bearer ${access_token}` },
+      })
+
+      const keycloakUserId: string = response.data.sub
+      if (!keycloakUserId) {
+        throw new Error("Impossible de récupérer l'ID Keycloak de l'utilisateur.")
+      }
+
+      // Récupérer l'utilisateur correspondant dans la base de données
+      const user: User | null = await User.findBy('keycloak_user_id', keycloakUserId)
+
+      if (!user) {
+        throw new Error('Utilisateur non trouvé dans la base de données.')
+      }
+
+      return user
+    } catch (error: any) {
+      logger.warn("Échec de la récupération de l'utilisateur authentifié : ", error.message)
+      return null
+    }
+  }
+
+  /**
    * Échange un code d'autorisation contre un token d'accès Keycloak
    * @param {string} code - Code d'autorisation reçu après connexion
    * @param {string} redirectUri - URI de redirection utilisée
@@ -97,6 +128,7 @@ export default class KeycloakAdminService {
         expiresAt: DateTime.now().plus({ seconds: expires_in }),
       })
     } catch (error: any) {
+      console.log({ error })
       throw new Error("Échec de l'échange du code contre un token : " + error.message)
     }
   }
@@ -182,6 +214,9 @@ export default class KeycloakAdminService {
       })
 
       logger.info(`Utilisateur cree avec succes: ${email}`)
+      console.log({
+        createdUser,
+      })
       return createdUser.id
     } catch (error: any) {
       throw new Error(`Echec de la creation de l utilisateur, erreur Keycloak: ${error.message}`)
@@ -244,6 +279,7 @@ export default class KeycloakAdminService {
    */
   public static async sessionIsValid(access_token: string): Promise<boolean> {
     try {
+      console.log({ access_token })
       await this.keycloakAxios.get('/userinfo', {
         headers: { Authorization: `Bearer ${access_token}` },
       })
@@ -251,6 +287,7 @@ export default class KeycloakAdminService {
       logger.info('Token valide')
       return true
     } catch (error: any) {
+      console.log({ error })
       logger.warn('Token invalide ou expiré, erreur Keycloak : ', error.message)
       return false
     }

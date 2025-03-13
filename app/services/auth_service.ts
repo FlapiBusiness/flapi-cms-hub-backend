@@ -47,6 +47,11 @@ export default class AuthService {
         firstname: data.firstname,
         email: data.email,
       })
+
+      /**
+       * Authentifier l'admin Keycloak après inscription d'un nouvel utilisateur.
+       */
+      // return await KeycloakAdminService.getTokenForUser(data.email, data.password)
     } catch (error: any) {
       logger.error(error)
       throw error
