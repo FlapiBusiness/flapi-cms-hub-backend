@@ -5,6 +5,7 @@ import { DateTime } from 'luxon'
 export const UserFactory = factory
   .define(User, async ({ faker }) => {
     return {
+      keycloakUserId: faker.number.int({ min: 100000, max: 999999 }), // ID utilisateur Keycloak aléatoire
       roleId: faker.number.int({ min: 1, max: 5 }), // Assurez-vous d'avoir des IDs valides dans la table user_roles
       lastname: faker.person.lastName(),
       firstname: faker.person.firstName(),
