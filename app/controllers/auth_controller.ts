@@ -6,6 +6,7 @@ import logger from '@adonisjs/core/services/logger'
 import type { SignUpPayload } from '#interfaces/auth_interface'
 import KeycloakAdminService from '#services/keycloack_admin_service'
 import type UserSession from '#models/user_session'
+import type User from '#models/user'
 
 /**
  * Controller to handle user authentication operations
@@ -52,8 +53,8 @@ export default class AuthController {
   }
 
   /**
-   * @signIn
-   * @operationId signIn
+   * @signinCallback
+   * @operationId signinCallback
    * @tag Auth
    * @summary Connexion d'un utilisateur
    * @description Permet à un utilisateur de se connecter
@@ -87,7 +88,20 @@ export default class AuthController {
   }
 
   /**
-   * @checkSession
+   * @checkSessionIsValid
+   * @operationId checkSessionIsValid
+   * @tag Auth
+   * @summary Vérifie si la session utilisateur est valide
+   * @description Vérifie la validité du token fourni dans l'en-tête Authorization.
+   * @responseBody 200 - <CheckSessionValidityResponse>
+   * @responseBody 401 - <CheckSessionValidityResponse>
+   * @responseBody 401 - <CheckSessionValidityResponse>
+   * @responseBody 500 - <CheckSessionValidityResponse>
+   */
+  /**
+   * Check if the user session is valid
+   * @param request
+   * @param response
    */
   public async checkSessionIsValid({ request, response }: HttpContext): Promise<void> {
     const token: string | undefined = request.header('Authorization')?.replace('Bearer ', '')
@@ -100,6 +114,42 @@ export default class AuthController {
       return response.ok({ valid: isValid })
     } catch (error: any) {
       return response.unauthorized({ valid: false, error: error.message })
+    }
+  }
+
+  /**
+   * @getAuthenticatedUser
+   * @operationId getAuthenticatedUser
+   * @tag Auth
+   * @summary Récupère l'utilisateur authentifié
+   * @description Retourne les informations de l'utilisateur connecté à partir du token fourni.
+   * @responseBody 200 - <User>
+   * @responseBody 401 - <getAuthenticatedUserErrorResponse>
+   * @responseBody 401 - <getAuthenticatedUserErrorResponse>
+   * @responseBody 500 - <getAuthenticatedUserErrorResponse>
+   */
+  /**
+   * Récupère l'utilisateur actuellement authentifié
+   * @param {HttpContext} ctx - Contexte HTTP
+   * @returns {Promise<void>}
+   */
+  public async getAuthenticatedUser({ request, response }: HttpContext): Promise<void> {
+    const token: string | undefined = request.header('Authorization')?.replace('Bearer ', '')
+
+    if (!token) {
+      return response.unauthorized({ error: 'Token manquant' })
+    }
+
+    try {
+      const user: User | null = await KeycloakAdminService.getAuthenticatedUser(token)
+
+      if (!user) {
+        return response.unauthorized({ error: 'Utilisateur non trouvé ou token invalide' })
+      }
+
+      return response.ok(user)
+    } catch (error: any) {
+      return response.internalServerError({ error: error.message })
     }
   }
 

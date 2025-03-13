@@ -50,40 +50,33 @@ export default class KeycloakAdminService {
   }
 
   /**
-   *
+   * Récupère l'utilisateur authentifié via son access_token
+   * @param {string} access_token - Le token de l'utilisateur
+   * @returns {Promise<User | null>} - L'utilisateur de la base de données ou null si non trouvé
    */
-  public static async getTokenForUser(
-    email: string,
-    password: string,
-  ): Promise<{ access_token: string; refresh_token: string }> {
+  public static async getAuthenticatedUser(access_token: string): Promise<User | null> {
     try {
-      const response: AxiosResponse<any, any> = await this.keycloakAxios.post(
-        '/token',
-        new URLSearchParams({
-          grant_type: 'password',
-          client_id: env.get('KEYCLOAK_CLIENT_ID'),
-          client_secret: env.get('KEYCLOAK_CLIENT_SECRET'),
-          username: email,
-          password: password,
-        }),
-      )
-
-      console.log(response.data)
-
-      return {
-        access_token: response.data.access_token,
-        refresh_token: response.data.refresh_token,
-      }
-    } catch (error: any) {
-      console.log({
-        grant_type: 'password',
-        client_id: env.get('KEYCLOAK_CLIENT_ID'),
-        client_secret: env.get('KEYCLOAK_CLIENT_SECRET'),
-        username: email,
-        password: password,
+      // Vérifier et récupérer l'ID Keycloak de l'utilisateur
+      const response: AxiosResponse<any, any> = await this.keycloakAxios.get('/userinfo', {
+        headers: { Authorization: `Bearer ${access_token}` },
       })
-      console.log(error)
-      throw new Error("Échec de l'authentification après inscription : " + error.message)
+
+      const keycloakUserId: string = response.data.sub
+      if (!keycloakUserId) {
+        throw new Error("Impossible de récupérer l'ID Keycloak de l'utilisateur.")
+      }
+
+      // Récupérer l'utilisateur correspondant dans la base de données
+      const user: User | null = await User.findBy('keycloak_user_id', keycloakUserId)
+
+      if (!user) {
+        throw new Error('Utilisateur non trouvé dans la base de données.')
+      }
+
+      return user
+    } catch (error: any) {
+      logger.warn("Échec de la récupération de l'utilisateur authentifié : ", error.message)
+      return null
     }
   }
 
@@ -135,6 +128,7 @@ export default class KeycloakAdminService {
         expiresAt: DateTime.now().plus({ seconds: expires_in }),
       })
     } catch (error: any) {
+      console.log({ error })
       throw new Error("Échec de l'échange du code contre un token : " + error.message)
     }
   }
@@ -285,6 +279,7 @@ export default class KeycloakAdminService {
    */
   public static async sessionIsValid(access_token: string): Promise<boolean> {
     try {
+      console.log({ access_token })
       await this.keycloakAxios.get('/userinfo', {
         headers: { Authorization: `Bearer ${access_token}` },
       })
@@ -292,6 +287,7 @@ export default class KeycloakAdminService {
       logger.info('Token valide')
       return true
     } catch (error: any) {
+      console.log({ error })
       logger.warn('Token invalide ou expiré, erreur Keycloak : ', error.message)
       return false
     }

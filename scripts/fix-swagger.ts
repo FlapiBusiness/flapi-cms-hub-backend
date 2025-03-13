@@ -49,6 +49,28 @@ const toPascalCase = (str: string): string => {
   return str.toLowerCase().replace(/(^\w|_\w)/g, (match) => match.toUpperCase().replace('_', ''))
 }
 
+// 🔹 Fonction pour supprimer les préfixes public_, private_, readonly_ des propriétés et du tableau required
+const removePropertyPrefixes = (schema: SchemaObject): void => {
+  if (schema.type === 'object' && schema.properties) {
+    const newProperties: Record<string, PropertyObject> = {}
+
+    // 🔹 Supprime les préfixes dans `properties` (public_, private_, readonly_)
+    Object.entries(schema.properties).forEach(([propName, prop]) => {
+      const cleanPropName = propName.replace(/^(public_|private_readonly_|private_|readonly_)/, '')
+      newProperties[cleanPropName] = prop
+    })
+
+    schema.properties = newProperties
+
+    // 🔹 Supprime les préfixes dans `required` (public avec espace, private avec espace, readonly avec espace)
+    if (schema.required && Array.isArray(schema.required)) {
+      schema.required = schema.required.map((field) =>
+        field.replace(/^(public |private readonly |private |readonly )/, '').trim(),
+      )
+    }
+  }
+}
+
 // ✅ Fonction principale pour corriger le Swagger.json
 export const fixSwaggerJsonFile = (): void => {
   console.log('🔄 Correction du fichier Swagger en cours...')
@@ -102,6 +124,9 @@ export const fixSwaggerJsonFile = (): void => {
       }
     }
   })
+
+  // 🚀 Supprime les préfixes des propriétés des schémas
+  Object.values(swagger.components.schemas).forEach(removePropertyPrefixes)
 
   // 📥 Sauvegarde du fichier corrigé
   fs.writeFileSync(SWAGGER_PATH, JSON.stringify(swagger, null, 2), 'utf8')

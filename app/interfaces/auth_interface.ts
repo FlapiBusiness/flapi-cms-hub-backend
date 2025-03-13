@@ -25,3 +25,21 @@ export interface SignUpPayload {
   password: string
   password_confirmation: string
 }
+
+/**
+ * CheckSessionValidityResponse
+ * @property {boolean} valid - The session validity status
+ * @property {string} error - The error message if the session is not valid
+ */
+export interface CheckSessionValidityResponse {
+  valid: boolean
+  error?: string
+}
+
+/**
+ * GetAuthenticatedUserResponse
+ * @property {User} user - The authenticated user
+ */
+export interface getAuthenticatedUserErrorResponse {
+  error: string
+}
