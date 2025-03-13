@@ -1,11 +1,9 @@
 import User from '#models/user'
 import type { SignUpPayload } from '#interfaces/auth_interface'
-import type { LoginPayload } from '#validators/login_validator'
 import logger from '@adonisjs/core/services/logger'
-import MailService from '#services/mail_service'
-import env from '#start/env'
-import BadRequestException from '#exceptions/bad_request_exception'
 import KeycloakAdminService from '#services/keycloack_admin_service'
+import UserRole from '#models/user_role'
+import { UserRoles } from '#enums/user_roles'
 
 /**
  * Service to handle user sign up operations
@@ -19,115 +17,37 @@ export default class AuthService {
    */
   public static async signUp(data: SignUpPayload): Promise<void> {
     try {
-      const keycloakUserId: number = await KeycloakAdminService.createUser(
+      /**
+       * Créer un nouvel utilisateur dans Keycloak.
+       * Egalement, ajouter le rôle par défaut ADMIN_CLIENT pour les nouveaux utilisateurs dans Keycloak.
+       */
+      const keycloakUserId: string = await KeycloakAdminService.createUser(
         data.email,
         data.password,
         data.firstname,
         data.lastname,
       )
+      // TODO: Voir côté keycloak pour ajouter le rôle ADMIN_CLIENT avant
+      //await KeycloakAdminService.addUserRole(keycloakUserId, UserRoles.ADMIN_CLIENT)
 
-      const user: User = await User.create({
-        roleId: data.role_id,
+      /**
+       * Si l'utilisateur est créé avec succès dans Keycloak, on peut alors créer l'utilisateur dans la base de données.
+       * On utilise le rôle par défaut ADMIN_CLIENT pour les nouveaux utilisateurs,
+       * qui sont des entreprises qui utilisent Flapi pour gérer leurs clients.
+       */
+      const defaultRole: UserRole = await UserRole.findByOrFail('name', UserRoles.ADMIN_CLIENT)
+
+      /**
+       * Créer un nouvel utilisateur dans la base de données de Flapi.
+       */
+      await User.create({
+        roleId: defaultRole.id,
         keycloakUserId: keycloakUserId,
         lastname: data.lastname,
         firstname: data.firstname,
         email: data.email,
-        password: data.password, // sera hashé automatiquement
-        currencyCode: data.currency_code,
-        ipAddress: data.ip_address,
-        ipRegion: data.ip_region,
-        isActive: false,
-        activeCode: Math.floor(100000 + Math.random() * 900000),
-      })
-
-      await MailService.sendEmail(user.email, 'welcome', 'Welcome to Flapi', {
-        username: user.firstname + ' ' + user.lastname,
-        code: user.activeCode,
-        redirect_uri:
-          env.get('FRONTEND_APP_BASE_URL') + env.get('FRONTEND_APP_REDIRECT_URI_ACCOUNT_VALIDATE') + user.email,
       })
     } catch (error: any) {
-      logger.error(error)
-      throw error
-    }
-  }
-
-  /**
-   * Authenticate a user with email and password
-   * @param {LoginPayload} payload - The login data
-   * @returns {Promise<User>} - The authenticated user instance
-   */
-  public static async signIn(payload: LoginPayload): Promise<User> {
-    try {
-      // Vérifier les identifiants (email et mot de passe)
-      const user: User = await User.verifyCredentials(payload.email, payload.password)
-
-      // Vérifier si l'utilisateur à activer sont compte via le code pin.
-      const isActive: boolean = await this.isActive(user.email)
-      if (!isActive) {
-        throw new Error('User account is inactive, verification code is required')
-      }
-
-      return user
-    } catch (error: any) {
-      logger.error('Error in signIn:', error.message || error)
-      throw new Error(error.message || 'Invalid credentials')
-    }
-  }
-
-  /**
-   * Check if a user account is active
-   * @param {string} email - The email of the user to check
-   * @returns {Promise<boolean>} - Whether the user account is active
-   */
-  public static async isActive(email: string): Promise<boolean> {
-    const user: User = await User.findByOrFail('email', email)
-    return user.isActive
-  }
-
-  /**
-   * Verify the user's validation code
-   * @param {string} email - The email of the user to verify
-   * @param {number} code - The validation code to verify
-   * @returns {Promise<void>} - A promise that resolves with no return value
-   */
-  public static async verifyCode(email: string, code: number): Promise<void> {
-    const user: User = await User.findByOrFail('email', email)
-    if (user.activeCode !== code) {
-      throw new BadRequestException('Invalid code')
-    }
-
-    try {
-      await user.merge({ isActive: true }).save()
-    } catch (error) {
-      logger.error(error)
-      throw error
-    }
-  }
-
-  /**
-   * Resend the validation code to the user
-   * @param {string} email - The email of the user to resend the code
-   * @returns {Promise<void>} - A promise that resolves with no return value
-   */
-  public static async resendNewCodeVerificationAccount(email: string): Promise<void> {
-    const user: User = await User.findByOrFail('email', email)
-
-    /**
-     * Vu que le premier code d'activation à déjà était générer lors de l'incription
-     * on le met à jour avec un nouveau code
-     */
-    const activeCode: number = Math.floor(100000 + Math.random() * 900000)
-    await user.merge({ activeCode: activeCode }).save()
-
-    try {
-      await MailService.sendEmail(user.email, 'welcome', 'Activation code resend - CrzGames', {
-        username: user.firstname + ' ' + user.lastname,
-        code: user.activeCode,
-        redirect_uri:
-          env.get('FRONTEND_APP_BASE_URL') + env.get('FRONTEND_APP_REDIRECT_URI_ACCOUNT_VALIDATE') + user.email,
-      })
-    } catch (error) {
       logger.error(error)
       throw error
     }

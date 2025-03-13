@@ -5,6 +5,9 @@ import type { AxiosInstance, AxiosResponse } from 'axios'
 import type RoleRepresentation from '@keycloak/keycloak-admin-client/lib/defs/roleRepresentation.js'
 import logger from '@adonisjs/core/services/logger'
 import type UserRepresentation from '@keycloak/keycloak-admin-client/lib/defs/userRepresentation.js'
+import User from '#models/user'
+import UserSession from '#models/user_session'
+import { DateTime } from 'luxon'
 
 /**
  * Service pour gérer les utilisateurs Keycloak
@@ -47,19 +50,106 @@ export default class KeycloakAdminService {
   }
 
   /**
+   * Échange un code d'autorisation contre un token d'accès Keycloak
+   * @param {string} code - Code d'autorisation reçu après connexion
+   * @param {string} redirectUri - URI de redirection utilisée
+   * @returns {Promise<UserSession>} - Session créée avec tokens stockés
+   */
+  public static async exchangeCodeForTokenAndCreateUserSession(
+    code: string,
+    redirectUri: string,
+  ): Promise<UserSession> {
+    try {
+      // Étape 1 : Échanger le code contre un token
+      const response: AxiosResponse<any, any> = await this.keycloakAxios.post(
+        '/token',
+        new URLSearchParams({
+          grant_type: 'authorization_code',
+          client_id: env.get('KEYCLOAK_CLIENT_ID'),
+          client_secret: env.get('KEYCLOAK_CLIENT_SECRET'),
+          code: code,
+          redirect_uri: redirectUri,
+        }),
+      )
+      const { access_token, refresh_token, expires_in, session_state } = response.data
+
+      // Étape 2 : Obtenir l'ID utilisateur Keycloak via `/userinfo` à l'aide du : `access_token`
+      const response2: AxiosResponse<any, any> = await this.keycloakAxios.get('/userinfo', {
+        headers: { Authorization: `Bearer ${access_token}` },
+      })
+      const keycloakUserId: string = response2.data.sub // ID Keycloak de l'utilisateur
+      if (!keycloakUserId) {
+        throw new Error("Impossible de récupérer l'ID Keycloak de l'utilisateur.")
+      }
+
+      // Étape 3 : Trouver l'utilisateur dans ta base de données via `keycloakUserId`
+      const user: User = await User.findByOrFail('keycloak_user_id', keycloakUserId)
+
+      // Étape 4 : Stocker la session avec les tokens
+      return await UserSession.create({
+        userId: user.id,
+        sessionState: session_state,
+        issuer: 'https://dev.auth.flapi.org/realms/master',
+        redirectUri: redirectUri,
+        type: 'Bearer',
+        accessToken: access_token,
+        refreshToken: refresh_token,
+        expiresAt: DateTime.now().plus({ seconds: expires_in }),
+      })
+    } catch (error: any) {
+      throw new Error("Échec de l'échange du code contre un token : " + error.message)
+    }
+  }
+
+  /**
+   * Rafraîchit un token_access à l'aide du refresh_token
+   * @param {number} userId - ID de l'utilisateur
+   * @returns {Promise<UserSession>} - Nouvelle session avec le token mis à jour
+   */
+  public static async refreshAccessToken(userId: number): Promise<UserSession> {
+    try {
+      // Etape 1 : Récupération de la session de l'utilisateur
+      const session: UserSession = await UserSession.findByOrFail('userId', userId)
+
+      // Etape 2 : Appel de Keycloak pour rafraîchir le token
+      const response: AxiosResponse<any, any> = await this.keycloakAxios.post(
+        '/token',
+        new URLSearchParams({
+          grant_type: 'refresh_token',
+          client_id: env.get('KEYCLOAK_CLIENT_ID'),
+          client_secret: env.get('KEYCLOAK_CLIENT_SECRET'),
+          refresh_token: session.refreshToken,
+        }),
+      )
+      const { access_token, refresh_token, expires_in } = response.data
+
+      // Etape 3 : Mise à jour de la session utilisateur en base de données
+      session.accessToken = access_token
+      session.refreshToken = refresh_token
+      session.expiresAt = DateTime.now().plus({ seconds: expires_in })
+      await session.save()
+
+      // Etape 4 : Retourner la session utilisateur mise à jour
+      return session
+    } catch (error: any) {
+      throw new Error('Échec du rafraîchissement du token : ' + error.message)
+    }
+  }
+
+  /**
    * Crée un utilisateur dans Keycloak
    * @param {string} email - Email de l'utilisateur
    * @param {string} password - Mot de passe de l'utilisateur
    * @param {string} firstName - Prénom de l'utilisateur
    * @param {string} lastName - Nom de l'utilisateur
-   * @returns {Promise<number>} - ID de l'utilisateur créé
+   * @returns {Promise<string>} - ID de l'utilisateur créé
    */
   public static async createUser(
     email: string,
     password: string,
     firstName: string,
     lastName: string,
-  ): Promise<number> {
+  ): Promise<string> {
     await this.authenticateAdmin()
 
     try {
@@ -83,7 +173,6 @@ export default class KeycloakAdminService {
 
       // Étape 3 : Définition du mot de passe
       await this.kcAdmin.users.resetPassword({
-        realm: env.get('KEYCLOAK_REALM'),
         id: createdUser.id,
         credential: {
           type: 'password',
@@ -93,14 +182,14 @@ export default class KeycloakAdminService {
       })
 
       logger.info(`Utilisateur cree avec succes: ${email}`)
-      return Number(createdUser.id)
+      return createdUser.id
     } catch (error: any) {
       throw new Error(`Echec de la creation de l utilisateur, erreur Keycloak: ${error.message}`)
     }
   }
 
   /**
-   * Ajoute un rôle à un utilisateur
+   * Ajoute un rôle à un utilisateur dans Keycloak
    * @param {string} userId - ID de l'utilisateur
    * @param {string} roleName - Nom du rôle
    * @returns {Promise<void>}
@@ -130,7 +219,7 @@ export default class KeycloakAdminService {
   }
 
   /**
-   * Supprime un utilisateur
+   * Supprime un utilisateur de Keycloak
    * @param {string} userId - ID de l'utilisateur
    * @returns {Promise<void>}
    */
@@ -149,57 +238,14 @@ export default class KeycloakAdminService {
   }
 
   /**
-   * Inscription d'un utilisateur dans Keycloak et récupération du token
-   * @param {string} email - Email de l'utilisateur
-   * @param {string} password - Mot de passe
-   * @param {string} firstName - Prénom
-   * @param {string} lastName - Nom de famille
-   * @returns {Promise<any>} - Retourne le token et l'utilisateur créé
-   */
-  public static async registerUser(email: string, password: string, firstName: string, lastName: string): Promise<any> {
-    try {
-      await this.createUser(email, password, firstName, lastName)
-      return await this.loginUser(email, password)
-    } catch (error: any) {
-      throw new Error("Échec de l'inscription, erreur Keycloak : " + error.message)
-    }
-  }
-
-  /**
-   * Connexion d'un utilisateur et récupération du token JWT
-   * @param {string} email - Email de l'utilisateur
-   * @param {string} password - Mot de passe
-   * @returns {Promise<any>} - Token JWT
-   */
-  public static async loginUser(email: string, password: string): Promise<any> {
-    try {
-      const response: AxiosResponse<any, any> = await this.keycloakAxios.post(
-        '/token',
-        new URLSearchParams({
-          grant_type: 'password',
-          client_id: env.get('KEYCLOAK_CLIENT_ID'),
-          client_secret: env.get('KEYCLOAK_CLIENT_SECRET'),
-          username: email,
-          password: password,
-        }),
-      )
-
-      logger.info(`Utilisateur connecté: ${email}`)
-      return response.data
-    } catch (error: any) {
-      throw new Error('Echec de la connexion, verifiez vos identifiants, erreur Keycloak : ' + error.message)
-    }
-  }
-
-  /**
-   * Vérifie si un token est valide
-   * @param {string} token - Token d'accès JWT
+   * Vérifie si un token est valide en interrogeant Keycloak
+   * @param {string} access_token - Token d'accès JWT
    * @returns {Promise<boolean>} - Retourne vrai si le token est valide
    */
-  public static async checkSession(token: string): Promise<boolean> {
+  public static async sessionIsValid(access_token: string): Promise<boolean> {
     try {
       await this.keycloakAxios.get('/userinfo', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${access_token}` },
       })
 
       logger.info('Token valide')
@@ -211,7 +257,7 @@ export default class KeycloakAdminService {
   }
 
   /**
-   * Déconnecte un utilisateur en invalidant son token
+   * Déconnecte un utilisateur en invalidant son access_token
    * @param {string} refreshToken - Refresh token de l'utilisateur
    * @returns {Promise<void>}
    */

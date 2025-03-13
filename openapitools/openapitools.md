@@ -36,23 +36,10 @@ Ce guide explique comment l'installer, l'utiliser, gérer l'authentification et 
 - **Java** est nécessaire pour exécuter OpenAPI Generator. Assure-toi de l’avoir installé :
 
   ```sh
-  java -version
+  java --version
   ```
 
   Si ce n'est pas le cas, télécharge-le depuis [Java SE Downloads](https://www.oracle.com/java/technologies/javase-downloads.html).
-
-- **Installation via `npx` (recommandé) :**
-
-  ```sh
-  npx openapi-generator-cli version
-  ```
-
-  Cela permet d'utiliser l'outil sans installation globale.
-
-- **Installation globale (optionnelle) :**
-  ```sh
-  npm install -g @openapitools/openapi-generator-cli
-  ```
 
 ---
 
@@ -64,7 +51,7 @@ Pour générer un client **TypeScript Axios** basé sur un Swagger **public** :
 npx openapi-generator-cli generate -i https://petstore.swagger.io/v2/swagger.json -g typescript-axios -o ./api
 ```
 
-Si l'API est **protégée**, voir la section [Authentification](#authentification).
+Si l'URL du Swagger de l'API est **protégée**, voir la section [Authentification](#authentification).
 
 ---
 
@@ -82,7 +69,7 @@ npx openapi-generator-cli generate -i https://petstore.swagger.io/v2/swagger.jso
 
 ### 2️⃣ **Bearer Token (JWT, OAuth2)**
 
-Si ton API utilise un **Bearer Token** (OAuth2, JWT...), ajoute un **header Authorization** :
+Si ton API Swagger utilise un **Bearer Token** (OAuth2, JWT...), ajoute un **header Authorization** :
 
 ```sh
 npx openapi-generator-cli generate -i https://petstore.swagger.io/v2/swagger.json -g typescript-axios -o ./api --additional-properties=fetchOptions.headers.Authorization="Bearer TON_ACCESS_TOKEN"

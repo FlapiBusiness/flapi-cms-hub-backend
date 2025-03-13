@@ -6,7 +6,7 @@ import { domainValidator } from '#validators/domain_validator'
  * @type {object} WorkflowInputs
  * @property {string} customerName - Le nom du client.
  * @property {string} projectName - Le nom du projet.
- * @property {string} subdomain - Le sous-domaine.
+ * @property {string} fullDomain - Le domaine complet.
  * @property {string} categoryApp - La catégorie de l'application.
  * @property {string} longDescriptionApp - La description longue de l'application.
  * @property {string} shortDescriptionApp - La description courte de l'application.
@@ -14,7 +14,7 @@ import { domainValidator } from '#validators/domain_validator'
 export type CreateNewApplicationPayload = {
   customerName: string
   projectName: string
-  subdomain: string
+  fullDomain: string
   categoryApp: string
   longDescriptionApp: string
   shortDescriptionApp: string
@@ -28,7 +28,7 @@ export const createNewApplicationValidator = vine.compile(
   vine.object({
     customerName: vine.string().trim(),
     projectName: vine.string().trim(),
-    subdomain: domainValidator,
+    fullDomain: domainValidator,
     categoryApp: vine.string().trim(),
     longDescriptionApp: vine.string().trim(),
     shortDescriptionApp: vine.string().trim(),

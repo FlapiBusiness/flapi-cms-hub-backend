@@ -3,7 +3,8 @@ import User from '#models/user'
 import type { UpdateUserPayload } from '#validators/update_user_validator'
 
 /**
- *
+ * Service to handle user operations
+ * @class UserService
  */
 export default class UserService {
   /**

@@ -83,7 +83,7 @@ export class GitHubService {
       // Si la réponse est réussie, retourne true
       return response.status === 201
     } catch (error: any) {
-      logger.error('Erreur lors de la création du repository :', error.response?.data || error.message)
+      logger.error('Erreur lors de la création du repository :' + error.response?.data || error.message)
       throw error
     }
   }
@@ -117,7 +117,7 @@ export class GitHubService {
 
       return response.status === 204 // Succès si 204
     } catch (error: any) {
-      logger.error('Erreur lors du déclenchement du workflow :', error.response?.data || error.message)
+      logger.error('Erreur lors du déclenchement du workflow :' + error.response?.data || error.message)
       throw error
     }
   }
@@ -135,9 +135,9 @@ export class GitHubService {
         headers: this.AUTH_HEADER,
       })
 
-      console.log('Workflows disponibles :', response.data)
+      logger.info('Workflows disponibles :' + JSON.stringify(response.data))
     } catch (error: any) {
-      logger.error('Erreur lors de la récupération des workflows :', error.response?.data || error.message)
+      logger.error('Erreur lors de la récupération des workflows :' + error.response?.data || error.message)
       throw error
     }
   }
@@ -165,7 +165,7 @@ export class GitHubService {
         logger.info(`Protection appliquée avec succès sur la branche "${branch}" du repository "${repo}".`)
       }
     } catch (error: any) {
-      logger.error('Erreur lors de la protection des branches :', error.response?.data || error.message)
+      logger.error('Erreur lors de la protection des branches :' + error.response?.data || error.message)
       throw error
     }
   }
