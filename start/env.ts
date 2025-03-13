@@ -53,4 +53,8 @@ export default await Env.create(new URL('../', import.meta.url), {
   FRONTEND_APP_REDIRECT_URI_ACCOUNT_VALIDATE: Env.schema.string(),
   FRONTEND_APP_REDIRECT_URI_FORGOT_PASSWORD: Env.schema.string(),
   FRONTEND_APP_REDIRECT_URI_SEND_MAIL_TO_MODIFY_EMAIL: Env.schema.string(),
+  KEYCLOAK_URL: Env.schema.string(),
+  KEYCLOAK_REALM: Env.schema.string(),
+  KEYCLOAK_CLIENT_ID: Env.schema.string(),
+  KEYCLOAK_CLIENT_SECRET: Env.schema.string(),
 })

@@ -10,6 +10,7 @@ import './routes/client.js'
 import './routes/auth.js'
 import './routes/project.js'
 import './routes/database.js'
+import './routes/user.js'
 import './routes/team.js'
 
 /**

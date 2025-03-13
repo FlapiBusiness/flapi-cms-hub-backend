@@ -80,11 +80,11 @@ export default class O2SwitchService {
         await this.linkUserToDatabase(dbName)
         return true
       } else {
-        logger.warn('Failed to create database:', response.data?.errors || 'Unknown error')
+        logger.warn('Failed to create database:' + response.data?.errors || 'Unknown error')
         return false
       }
     } catch (error) {
-      logger.error('Error while creating database :', error)
+      logger.error('Error while creating database :' + error)
       throw error
     }
   }
@@ -110,7 +110,7 @@ export default class O2SwitchService {
 
       return response.data?.status === 1
     } catch (error) {
-      logger.error('Error while deleting database :', error)
+      logger.error('Error while deleting database :' + error)
       throw error
     }
   }
@@ -141,7 +141,7 @@ export default class O2SwitchService {
 
       return response.data?.status === 1
     } catch (error) {
-      logger.error('Error while linking user to database :', error)
+      logger.error('Error while linking user to database :' + error)
       throw error
     }
   }
@@ -168,10 +168,9 @@ export default class O2SwitchService {
         },
       )
 
-      console.log('response', response.data)
       return response.data?.status === 1
     } catch (error) {
-      logger.error('Error while renaming database :', error)
+      logger.error('Error while renaming database :' + error)
       throw error
     }
   }
@@ -197,7 +196,7 @@ export default class O2SwitchService {
 
       return response.data?.status === 1
     } catch (error) {
-      logger.error('Error while validating database integrity :', error)
+      logger.error('Error while validating database integrity :' + error)
       throw error
     }
   }
@@ -223,7 +222,7 @@ export default class O2SwitchService {
 
       return response.data?.status === 1
     } catch (error) {
-      logger.error('Error while repairing database tables :', error)
+      logger.error('Error while repairing database tables :' + error)
       throw error
     }
   }
@@ -261,12 +260,11 @@ export default class O2SwitchService {
         )
         return true
       } else {
-        logger.warn('Database restoration failed: ')
-        console.log(response.data)
+        logger.warn('Database restoration failed: ' + response.data || 'Unknown error')
         return false
       }
     } catch (error) {
-      logger.error('Error while restoring database: ', error)
+      logger.error('Error while restoring database: ' + error)
       throw error
     }
   }
@@ -292,11 +290,11 @@ export default class O2SwitchService {
           version,
         } as MySQLServerData
       } else {
-        logger.warn('Failed to fetch MySQL server information: ', response.data?.errors || 'Unknown error')
+        logger.warn('Failed to fetch MySQL server information: ' + response.data?.errors || 'Unknown error')
         return undefined
       }
     } catch (error) {
-      logger.error('Error while fetching MySQL server information: ', error)
+      logger.error('Error while fetching MySQL server information: ' + error)
       throw error
     }
   }
@@ -318,11 +316,11 @@ export default class O2SwitchService {
         logger.info('Successfully retrieved MySQL databases.')
         return response.data.result.data
       } else {
-        logger.warn('Failed to retrieve MySQL databases:', response.data.errors || 'Unknown error')
+        logger.warn('Failed to retrieve MySQL databases:' + response.data.errors || 'Unknown error')
         return []
       }
     } catch (error) {
-      logger.error('Error while listing MySQL databases:', error)
+      logger.error('Error while listing MySQL databases:' + error)
       throw error
     }
   }
@@ -344,12 +342,11 @@ export default class O2SwitchService {
         logger.info(`Successfully authorized remote host for databases: ${host}`)
         return true
       } else {
-        logger.warn(`Failed to authorize remote host for databases: ${host}`)
-        console.log(response.data)
+        logger.warn(`Failed to authorize remote host for databases: ${host}` + response.data.errors || 'Unknown error')
         return false
       }
     } catch (error) {
-      logger.error(`Error while authorizing remote host for databases: ${host}`, error)
+      logger.error(`Error while authorizing remote host for databases: ${host}` + error)
       throw error
     }
   }
@@ -369,12 +366,11 @@ export default class O2SwitchService {
         logger.info('Successfully retrieved authorized remote hosts.')
         return response.data.result.data as AuthorizedRemoteHostsDatabase
       } else {
-        logger.warn('Failed to retrieve authorized remote hosts.')
-        console.log(response.data)
+        logger.warn('Failed to retrieve authorized remote hosts:' + response.data.errors || 'Unknown error')
         return undefined
       }
     } catch (error) {
-      logger.error('Error while retrieving authorized remote hosts:', error)
+      logger.error('Error while retrieving authorized remote hosts:' + error)
       throw error
     }
   }

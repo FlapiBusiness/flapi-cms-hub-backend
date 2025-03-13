@@ -84,7 +84,10 @@ Pour plus de détails sur les conventions de commit, consultez : [Conventional C
 git clone git@github.com:FlapiBusiness/flapi-cms-hub-backend.git
 ```
 
-2. Steps by Platform :
+2. Créer le fichier **`.env.keys`** à la racine du repository, contenant les clés privées de déchiffrement ne doit jamais être versionné (déjà inclus dans le .gitignore). <br />
+   Les clés privées réelles sont stockées de manière sécurisée dans **1Password**, dans le coffre nommé **`.env.keys (Flapi - AdonisJS)`**.
+
+3. Steps by Platform :
 
 ```bash
 # Windows :
@@ -111,8 +114,8 @@ git clone git@github.com:FlapiBusiness/flapi-cms-hub-backend.git
 2. Run command :
 
 ```bash
-   # Start the development server on http://localhost:3555 (AdonisJS)
-   # Start the development server on http://localhost:7450 (PhpMyAdmin)
+   # Start the development server on http://localhost:3556 (AdonisJS)
+   # Start the development server on http://localhost:7500 (PhpMyAdmin)
    # Start the development server on http://localhost:8025 (Mailhog)
    # Start MariaDB port is : 3310
    npm install # just for the idea

@@ -1,9 +1,12 @@
 import type {
   ChangeResourceRecordSetsCommandInput,
   ChangeResourceRecordSetsCommandOutput,
+  HostedZone,
+  ListHostedZonesCommandOutput,
   ListResourceRecordSetsCommandOutput,
   ResourceRecordSet,
 } from '@aws-sdk/client-route-53'
+import { ListHostedZonesCommand } from '@aws-sdk/client-route-53'
 import { ListResourceRecordSetsCommand } from '@aws-sdk/client-route-53'
 import { Route53Client, ChangeResourceRecordSetsCommand } from '@aws-sdk/client-route-53'
 import type { CheckDomainAvailabilityCommandOutput } from '@aws-sdk/client-route-53-domains'
@@ -12,7 +15,7 @@ import env from '#start/env'
 import logger from '@adonisjs/core/services/logger'
 
 /**
- * Service pour gérer les sous-domaines AWS et vérifier la disponibilité des noms de domaine.
+ * Service pour gérer les sous-domaines et domaine AWS et vérifier la disponibilité des noms de domaine.
  * @class AWSDomainService
  */
 export default class AWSDomainService {
@@ -50,16 +53,16 @@ export default class AWSDomainService {
 
   /**
    * Vérifie si un domaine est disponible en utilisant l'API Route 53 Domains.
-   * @param {string} domain - Le nom de domaine à vérifier.
-   * @returns {Promise<boolean>} `true` si le domaine est disponible.
+   * @param {string} domain - Le nom de domaine à vérifier (ex: domain.com).
+   * @returns {Promise<boolean>} `true` si le domaine existe.
    */
   public static async checkDomainAvailability(domain: string): Promise<boolean> {
-    const command: CheckDomainAvailabilityCommand = new CheckDomainAvailabilityCommand({ DomainName: domain })
-
     try {
+      const command: CheckDomainAvailabilityCommand = new CheckDomainAvailabilityCommand({ DomainName: domain })
       const response: CheckDomainAvailabilityCommandOutput = await this.domainsClient.send(command)
+
       // Le domaine est disponible uniquement si le statut est "AVAILABLE"
-      return response.Availability === 'AVAILABLE'
+      return response.Availability !== 'AVAILABLE'
     } catch (error) {
       logger.error('Erreur lors de la vérification de la disponibilité du domaine via AWS :', error)
       throw error
@@ -67,27 +70,21 @@ export default class AWSDomainService {
   }
 
   /**
-   * Vérifie si un sous-domaine est configuré dans AWS Route 53.
-   * @param {string} hostedZoneId - L'ID de la zone hébergée Route 53.
-   * @param {string} subdomain - Le sous-domaine à vérifier.
-   * @param {string} domain - Le domaine principal associé.
+   * Vérifie si un sous-domaine est disponible, en utilisant l'API Route 53.
+   * @param {string} subdomain - Le sous-domaine à vérifier (ex: subdomain.domain.com).
    * @returns {Promise<boolean>} `true` si le sous-domaine existe.
    */
-  public static async checkSubdomainAvailability(
-    hostedZoneId: string,
-    subdomain: string,
-    domain: string,
-  ): Promise<boolean> {
+  public static async checkSubdomainAvailability(subdomain: string): Promise<boolean> {
     try {
+      const hostedZoneId: string | undefined = await this.getHostedZoneId(subdomain)
       const command: ListResourceRecordSetsCommand = new ListResourceRecordSetsCommand({
         HostedZoneId: hostedZoneId,
       })
       const response: ListResourceRecordSetsCommandOutput = await this.route53Client.send(command)
-      const fullSubdomain: string = `${subdomain}.${domain}`
 
       // Vérifie si le sous-domaine est présent dans les enregistrements DNS
       const recordExists: boolean | undefined = response.ResourceRecordSets?.some(
-        (record: ResourceRecordSet): boolean => record.Name === `${fullSubdomain}.`, // Les noms dans Route 53 incluent un "." final
+        (record: ResourceRecordSet): boolean => record.Name === `${subdomain}.`, // Les noms dans Route 53 incluent un "." final
       )
 
       return recordExists || false
@@ -99,12 +96,11 @@ export default class AWSDomainService {
 
   /**
    * Crée un sous-domaine dans AWS Route 53.
-   * @param {string} hostedZoneId - L'ID de la zone hébergée Route 53.
    * @param {string} subdomain - Le sous-domaine à créer.
-   * @param {string} domain - Le domaine cible.
    * @returns {Promise<ChangeResourceRecordSetsCommandOutput>} Le résultat de la commande AWS.
    */
-  public static async createSubdomain(hostedZoneId: string, subdomain: string, domain: string): Promise<boolean> {
+  public static async createSubdomain(subdomain: string): Promise<boolean> {
+    const hostedZoneId: string | undefined = await this.getHostedZoneId(subdomain)
     const params: ChangeResourceRecordSetsCommandInput = {
       HostedZoneId: hostedZoneId,
       ChangeBatch: {
@@ -112,7 +108,7 @@ export default class AWSDomainService {
           {
             Action: 'CREATE',
             ResourceRecordSet: {
-              Name: `${subdomain}.${domain}`,
+              Name: subdomain,
               Type: 'A',
               TTL: 60,
               ResourceRecords: [
@@ -136,5 +132,65 @@ export default class AWSDomainService {
       logger.error('Erreur lors de la création du sous-domaine:', error)
       throw error
     }
+  }
+
+  /**
+   * Récupère l'Hosted Zone ID pour un sous domaine donné.
+   * @param {string} subdomain - Sous domaine (ex: subdomain.domain.com)
+   * @returns {Promise<string | null>} - L'ID de la zone hébergée ou null si introuvable
+   */
+  public static async getHostedZoneId(subdomain: string): Promise<string | undefined> {
+    try {
+      const command: ListHostedZonesCommand = new ListHostedZonesCommand({})
+      const response: ListHostedZonesCommandOutput = await this.route53Client.send(command)
+
+      // Recherche la Hosted Zone ID correspondant au domaine principal dans la liste des zones hébergées sur AWS
+      const hostedZone: HostedZone | undefined = response.HostedZones?.find(
+        (zone: HostedZone): boolean => zone.Name === `${this.extractDomain(subdomain)}.`, // Les noms dans Route 53 incluent un "." final
+      )
+      if (!hostedZone?.Id) {
+        logger.error(`Hosted Zone introuvable sur AWS pour le domaine : ${this.extractDomain(subdomain)}`)
+        return undefined
+      }
+
+      return hostedZone.Id.replace('/hostedzone/', '')
+    } catch (error) {
+      console.error('Error fetching Hosted Zone ID:', error)
+      return undefined
+    }
+  }
+
+  /**
+   * Extrait le domaine principal à partir d'un sous-domaine
+   * @param {string} subdomain - Le sous-domaine (ex: subdomain.domain.com)
+   * @returns {string} - Le domaine principal (ex: domain.com)
+   */
+  public static extractDomain(subdomain: string): string {
+    const parts: string[] = subdomain.split('.')
+
+    if (parts.length < 2) {
+      // Retourne tel quel s'il n'y a pas de sous-domaine
+      return subdomain
+    }
+
+    // Prend les deux derniers éléments (ex pour "subdomain.domain.com" => "domain.com")
+    return parts.slice(-2).join('.')
+  }
+
+  /**
+   * Extrait le sous-domaine à partir d'un sous-domaine complet
+   * @param {string} subdomain - Le sous-domaine complet (ex: subdomain.domain.com)
+   * @returns {string} - Le sous-domaine (ex: subdomain)
+   */
+  public static extractSubdomain(subdomain: string): string {
+    const parts: string[] = subdomain.split('.')
+
+    if (parts.length < 2) {
+      // Retourne tel quel s'il n'y a pas de sous-domaine
+      return subdomain
+    }
+
+    // Prend les deux premiers éléments (ex pour "subdomain.domain.com" => "subdomain")
+    return parts[0]
   }
 }
