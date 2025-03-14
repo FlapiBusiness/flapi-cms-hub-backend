@@ -1,8 +1,7 @@
-// import type { HttpContext } from '@adonisjs/core/http'
-
 import type { HttpContext } from '@adonisjs/core/http'
 import DatabaseService from '#services/database_service'
 import type Database from '#models/database'
+import type { CreateDatabasePayload, UpdateDatabasePayload } from '#interfaces/database_interface'
 
 /**
  * Controller to handle database operations
@@ -27,9 +26,9 @@ export default class DatabasesController {
    * @param {HttpContext['response']} ctx.response - The HTTP response object
    */
   public async create({ request, response }: HttpContext): Promise<void> {
-    const database_name: string = request.input('name')
+    const database: CreateDatabasePayload = request.only(['name'])
 
-    await DatabaseService.createDatabase(database_name)
+    await DatabaseService.createDatabase(database.name)
 
     response.status(201).json({ message: 'Database created successfully' })
   }
@@ -86,7 +85,7 @@ export default class DatabasesController {
    * @summary Update a database
    * @description Update a database
    * @paramPath id - The ID of the database - @type(number) @required
-   * @requestBody { name: string } - The name of the database
+   * @requestBody <UpdateDatabasePayload>
    * @content application/json
    * @responseBody 200 - <MessageResponse>
    * @responseBody 400 - <MessageResponse>
@@ -101,8 +100,8 @@ export default class DatabasesController {
    * @param {HttpContext['params']} ctx.params - The HTTP params object
    */
   public async updateDatabase({ request, response, params }: HttpContext): Promise<void> {
-    const database_name: string = request.input('name')
-    await DatabaseService.updateDatabase(params.id, database_name)
+    const database: UpdateDatabasePayload = request.only(['name'])
+    await DatabaseService.updateDatabase(params.id, database.name)
     response.status(200).json({ message: 'Database updated successfully' })
   }
   //TODO: Add deleteDatabase method because need to check if a project use this database
