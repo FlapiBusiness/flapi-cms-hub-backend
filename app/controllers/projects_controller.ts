@@ -1,6 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { createProjectValidator, updateProjectValidator } from '#validators/project_validator'
-import type { ProjectPayload, UpdateProjectPayload } from '#validators/project_validator'
+import type { CreateProjectPayload, UpdateProjectPayload } from '#interfaces/project_interface'
 import ProjectService from '#services/project_service'
 import type Project from '#models/project'
 
@@ -9,12 +9,12 @@ import type Project from '#models/project'
  */
 export default class ProjectsController {
   /**
-   * @createProject
+   * @create
    * @operationId createProject
    * @tag Projects
    * @summary Create a project
    * @description Create a new project
-   * @requestBody <ProjectPayload>
+   * @requestBody <CreateProjectPayload>
    * @content application/json
    * @responseBody 201 - <MessageResponse>
    * @responseBody 400 - <MessageResponse>
@@ -27,7 +27,7 @@ export default class ProjectsController {
    * @returns {Promise<void>} - A promise that resolves with no return value
    */
   public async create({ request, response }: HttpContext): Promise<void> {
-    const payload: ProjectPayload = await createProjectValidator.validate(request.all())
+    const payload: CreateProjectPayload = await createProjectValidator.validate(request.all())
 
     await ProjectService.createProject(payload)
 
@@ -61,7 +61,7 @@ export default class ProjectsController {
    * @tag Projects
    * @summary Get a project by ID
    * @description Get a project by ID
-   * @param <id> <number>
+   * @paramPath id - The ID of the project - @type(number) @required
    * @content application/json
    * @responseBody 200 - <Project>
    * @responseBody 400 - <MessageResponse>
@@ -78,17 +78,18 @@ export default class ProjectsController {
   }
 
   /**
-     * @getProjectByUserId
-     * @operationId getProjectByUserId
-     * @tag Projects
-     * @summary Get a project by user ID
-     * @description Get a project by user ID
-     * @param <user_id> <number>
-     * @content application/json
-     * @responseBody 200 - <Project[]>
-     * @responseBody 400 - <MessageResponse>
+   * @getProjectByUserId
+   * @operationId getProjectByUserId
+   * @tag Projects
+   * @summary Get a project by user ID
+   * @description Get a project by user ID
+   * @paramPath user_id - The ID of the user - @type(number) @required
+   * @content application/json
+   * @responseBody 200 - <Project[]>
+   * @responseBody 400 - <MessageResponse>
+   */
   /**
-   * Get a project by user ID
+   * Get a project by User ID
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
    * @param {HttpContext['response']} ctx.response - The HTTP response object
    * @param {HttpContext['params']} ctx.params - The HTTP params object
@@ -104,7 +105,7 @@ export default class ProjectsController {
    * @tag Projects
    * @summary Update a project
    * @description Update a project
-   * @param <id> <number>
+   * @paramPath id - The ID of the project - @type(number) @required
    * @requestBody <UpdateProjectPayload>
    * @content application/json
    * @responseBody 200 - <MessageResponse>
@@ -129,7 +130,7 @@ export default class ProjectsController {
    * @tag Projects
    * @summary Delete a project
    * @description Delete a project
-   * @param <id> <number>
+   * @paramPath id - The ID of the project - @type(number) @required
    * @content application/json
    * @responseBody 200 - <MessageResponse>
    * @responseBody 400 - <MessageResponse>
@@ -146,6 +147,19 @@ export default class ProjectsController {
   }
 
   /**
+   * @addTeamToProject
+   * @operationId addTeamToProject
+   * @tag Projects
+   * @summary Add a team to a project
+   * @description Add a team to a project
+   * @paramPath project_id - The ID of the project - @type(number) @required
+   * @paramPath team_id - The ID of the team - @type(number) @required
+   * @content  application/json
+   * @responseBody 200 - <Project>
+   * @responseBody 400 - <MessageResponse>
+   * @responseBody 404 - <MessageResponse>
+   */
+  /**
    * Ajoute une équipe à un projet.
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
    * @param {HttpContext['response']} ctx.response - The HTTP response object
@@ -157,6 +171,19 @@ export default class ProjectsController {
     return response.ok(project)
   }
 
+  /**
+   * @removeTeamFromProject
+   * @operationId removeTeamFromProject
+   * @tag Projects
+   * @summary Remove a team from a project
+   * @description Remove a team from a project
+   * @paramPath project_id - The ID of the project - @type(number) @required
+   * @paramPath team_id - The ID of the team - @type(number) @required
+   * @content  application/json
+   * @responseBody 200 - <Project>
+   * @responseBody 400 - <MessageResponse>
+   * @responseBody 404 - <MessageResponse>
+   */
   /**
    * Retire une équipe d'un projet.
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects

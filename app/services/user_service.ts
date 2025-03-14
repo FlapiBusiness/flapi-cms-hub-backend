@@ -1,6 +1,6 @@
 // app/Services/UserService.ts
 import User from '#models/user'
-import type { UpdateUserPayload } from '#validators/update_user_validator'
+import type { UpdateUserPayload } from '#interfaces/user_interface'
 
 /**
  * Service to handle user operations

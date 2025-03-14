@@ -1,4 +1,4 @@
-import type { ProjectPayload, UpdateProjectPayload } from '#validators/project_validator'
+import type { CreateProjectPayload, UpdateProjectPayload } from '#interfaces/project_interface'
 import logger from '@adonisjs/core/services/logger'
 import MailService from '#services/mail_service'
 import env from '#start/env'
@@ -14,10 +14,10 @@ import Team from '#models/team'
 export default class ProjectService {
   /**
    * Create a new project
-   * @param {ProjectPayload} payload - Data to create the project
+   * @param {CreateProjectPayload} payload - Data to create the project
    * @returns {Promise<void>} - A promise that resolves with no return value
    */
-  public static async createProject(payload: ProjectPayload): Promise<Project> {
+  public static async createProject(payload: CreateProjectPayload): Promise<Project> {
     try {
       // Create the project
       const project: Project = await Project.create({

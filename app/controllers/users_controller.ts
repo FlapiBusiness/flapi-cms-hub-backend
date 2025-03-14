@@ -2,38 +2,40 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import UserService from '#services/user_service'
 import type User from '#models/user'
-import type { UpdateUserPayload } from '#validators/update_user_validator'
+import type { UpdateUserPayload } from '#interfaces/user_interface'
 import { UpdateUserValidator } from '#validators/update_user_validator'
 
 /**
- *
+ * Controller to handle user operations
  */
 export default class UsersController {
   /**
    * @getAllUsers
    * @operationId getAllUsers
-   * @tag User
-   * @summary Récupérer tous les utilisateurs
-   * @description Récupérer tous les utilisateurs
+   * @tag Users
+   * @summary Get all users
+   * @description Get all users
    * @content application/json
-   * @responseBody 200 - <User>[]
-   * @responseBody 401 - <MessageResponse>
+   * @responseBody 200 - <User[]>
+   * @responseBody 400 - <MessageResponse>
    */
   /**
-   * Récupère tous les utilisateurs.
+   * Get all users
+   * @param {HttpContext} ctx - The HTTP context containing the request and response objects
+   * @param {HttpContext['response']} ctx.response - The HTTP response object
    */
   public async getAllUsers({ response }: HttpContext): Promise<void> {
     const users: User[] = await UserService.getAllUsers()
-    return response.ok(users)
+    response.status(200).json(users)
   }
 
   /**
    * @getUserById
    * @operationId getUserById
    * @tag User
-   * @summary recuperer un utilisateur par son ID
-   * @description recuperer un utilisateur par son ID
-   * @pathParam userId - ID de l'utilisateur
+   * @summary Get user by ID
+   * @description Get user by ID
+   * @paramPath id - The ID of the user - @type(number) @required
    * @content application/json
    * @responseBody 200 - <User>
    * @responseBody 401 - <MessageResponse>
@@ -58,9 +60,9 @@ export default class UsersController {
    * @updateUser
    * @operationId updateUser
    * @tag User
-   * @summary Mettre à jour un utilisateur
-   * @description Mettre à jour un utilisateur
-   * @pathParam userId - ID de l'utilisateur
+   * @summary Update User
+   * @description Update User
+   * @paramPath id - The ID of the user - @type(number) @required
    * @requestBody <UpdateUserPayload>
    * @content application/json
    * @responseBody 200 - <User>
@@ -80,10 +82,9 @@ export default class UsersController {
    * @deleteUser
    * @operationId deleteUser
    * @tag User
-   * @summary Supprimer un utilisateur
-   * @description Supprimer un utilisateur
-   * @pathParam userId - ID de l'utilisateur
-   * @responseBody 204 - <MessageResponse>
+   * @summary Delete user
+   * @description Delete user
+   * @pathParam id - The ID of the user - @type(number) @required
    * @responseBody 401 - <MessageResponse>
    */
   /**

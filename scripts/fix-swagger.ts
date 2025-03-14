@@ -56,14 +56,14 @@ const removePropertyPrefixes = (schema: SchemaObject): void => {
 
     // 🔹 Supprime les préfixes dans `properties` (public_, private_, readonly_)
     Object.entries(schema.properties).forEach(([propName, prop]) => {
-      const cleanPropName = propName.replace(/^(public_|private_readonly_|private_|readonly_)/, '')
+      const cleanPropName: string = propName.replace(/^(public_|private_readonly_|private_|readonly_)/, '')
       newProperties[cleanPropName] = prop
     })
 
     schema.properties = newProperties
 
     // 🔹 Supprime les préfixes dans `required` (public avec espace, private avec espace, readonly avec espace)
-    if (schema.required && Array.isArray(schema.required)) {
+    if (schema.required && Array.isArray(schema.required) && schema.required.length > 0) {
       schema.required = schema.required.map((field) =>
         field.replace(/^(public |private readonly |private |readonly )/, '').trim(),
       )
