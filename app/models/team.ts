@@ -10,24 +10,30 @@ import Project from '#models/project'
  */
 export default class Team extends BaseModel {
   @column({ isPrimary: true })
+  // @required @example(1)
   declare public id: number
 
   @column()
+  // @required @example('Team Name')
   declare public name: string
 
   @column()
+  // @example('Description of the team')
   declare public description: string | undefined
 
   @column()
+  // @required @example(1)
   declare public owner_id: number
 
   @belongsTo(() => User, { foreignKey: 'owner_id' })
   declare public owner: BelongsTo<typeof User>
 
   @column.dateTime({ autoCreate: true })
+  // @required @example('2021-01-01T00:00:00.000Z')
   declare public createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
+  // @required @example('2021-01-01T00:00:00.000Z')
   declare public updatedAt: DateTime
 
   /**

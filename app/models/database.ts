@@ -6,14 +6,18 @@ import { BaseModel, column } from '@adonisjs/lucid/orm'
  */
 export default class Database extends BaseModel {
   @column({ isPrimary: true })
+  // @required @example(1)
   declare public id: number
 
   @column()
+  // @required @example('my_database')
   declare public name: string
 
   @column.dateTime({ autoCreate: true })
+  // @required @example('2022-01-01T00:00:00.000Z')
   declare public createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
+  // @required @example('2022-01-01T00:00:00.000Z')
   declare public updatedAt: DateTime
 }

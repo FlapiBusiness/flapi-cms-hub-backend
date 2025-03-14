@@ -17,15 +17,3 @@ export const UpdateUserValidator = vine.compile(
       .optional(),
   }),
 )
-
-/**
- * Type généré à partir du schéma de validation.
- * Permet de réutiliser le type sans devoir le redéfinir.
- */
-export type UpdateUserPayload = {
-  lastname?: string
-  firstname?: string
-  email?: string
-  password?: string
-  password_confirmation?: string
-}

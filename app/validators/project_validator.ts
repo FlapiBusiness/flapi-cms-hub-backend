@@ -3,28 +3,6 @@ import type User from '#models/user'
 import type { Database } from '@adonisjs/lucid/database'
 
 /**
- * Type manuel basé sur le schéma
- */
-export type ProjectPayload = {
-  application_name: string
-  user_id: number
-  domain_name: string
-  file_id: number
-  database_id: number
-}
-
-/**
- *
- */
-export type UpdateProjectPayload = {
-  application_name?: string
-  user_id?: number
-  domain_name?: string
-  file_id?: number
-  database_id?: number
-}
-
-/**
  * Validation rules for create the project form.
  */
 // eslint-disable-next-line @typescript-eslint/typedef

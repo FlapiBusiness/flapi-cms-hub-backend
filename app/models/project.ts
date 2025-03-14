@@ -14,18 +14,21 @@ export default class Project extends BaseModel {
    * The unique identifier for the project.
    */
   @column({ isPrimary: true })
+  // @required @example(1)
   declare public id: number
 
   /**
    * The name of the application.
    */
   @column()
+  // @required @example('My Application')
   declare public application_name: string
 
   /**
    * The ID of the user associated with the project.
    */
   @column()
+  // @required @example(1)
   declare public user_id: number
 
   /**
@@ -40,12 +43,14 @@ export default class Project extends BaseModel {
    * The domain name of the project.
    */
   @column()
+  // @required @example('myapplication')
   declare public domain_name: string
 
   /**
    * The ID of the file associated with the project.
    */
   @column()
+  // @required @example(1)
   declare public file_id: number
 
   /**
@@ -60,6 +65,7 @@ export default class Project extends BaseModel {
    * The ID of the database associated with the project.
    */
   @column()
+  // @required @example(1)
   declare public database_id: number
 
   /**
@@ -92,11 +98,13 @@ export default class Project extends BaseModel {
    * The timestamp when the project was created.
    */
   @column.dateTime({ autoCreate: true })
+  // @required @example('2022-01-01T00:00:00.000Z')
   declare public createdAt: DateTime
 
   /**
    * The timestamp when the project was last updated.
    */
   @column.dateTime({ autoCreate: true, autoUpdate: true })
+  // @required @example('2022-01-01T00:00:00.000Z')
   declare public updatedAt: DateTime
 }
