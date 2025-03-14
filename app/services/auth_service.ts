@@ -4,6 +4,7 @@ import logger from '@adonisjs/core/services/logger'
 import KeycloakAdminService from '#services/keycloack_admin_service'
 import UserRole from '#models/user_role'
 import { UserRoles } from '#enums/user_roles'
+import RecaptchaService from './recaptcha_service.js'
 
 /**
  * Service to handle user sign up operations
@@ -52,6 +53,25 @@ export default class AuthService {
        * Authentifier l'admin Keycloak après inscription d'un nouvel utilisateur.
        */
       // return await KeycloakAdminService.getTokenForUser(data.email, data.password)
+    } catch (error: any) {
+      logger.error(error)
+      throw error
+    }
+  }
+
+  /**
+   * Verify a reCAPTCHA token
+   * @param {string} token - The reCAPTCHA token to verify
+   * @returns {Promise<void>} - A promise that resolves with no return value
+   * @throws {BadRequestException} - If the token is invalid
+   * @throws {InternalServerErrorException} - If an error occurs while verifying the token
+   */
+  public static async verifyRecaptchaToken(token: string): Promise<void> {
+    try {
+      // Vérifier le token reCAPTCHA
+      await RecaptchaService.verifyRecaptchaToken(token)
+
+      return Promise.resolve()
     } catch (error: any) {
       logger.error(error)
       throw error

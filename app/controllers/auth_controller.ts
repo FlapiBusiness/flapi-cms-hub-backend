@@ -34,8 +34,11 @@ export default class AuthController {
    */
   public async signUp({ request, response }: HttpContext): Promise<void> {
     try {
-      // Valider les données d'entrée
+      // Valider les données d'entrée);
       const payload: SignUpPayload = await signUpValidator.validate(request.all())
+
+      // Vérifier le token reCAPTCHA
+      await AuthService.verifyRecaptchaToken(payload.recaptcha_token)
 
       // Appel du service pour créer un nouvel utilisateur
       await AuthService.signUp(payload)

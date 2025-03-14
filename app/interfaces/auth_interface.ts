@@ -24,6 +24,7 @@ export interface SignUpPayload {
   email: string
   password: string
   password_confirmation: string
+  recaptcha_token: string
 }
 
 /**
@@ -42,4 +43,23 @@ export interface CheckSessionValidityResponse {
  */
 export interface getAuthenticatedUserErrorResponse {
   error: string
+}
+
+/**
+ * ReCAPTCHA response
+ * @interface RecaptchaResponse
+ * @property {boolean} success - The reCAPTCHA token validity status
+ * @property {string} challenge_ts - The timestamp of the challenge
+ * @property {string} hostname - The hostname of the reCAPTCHA request
+ * @property {number} [score] - The score of the reCAPTCHA token
+ * @property {string} [action] - The action of the reCAPTCHA token
+ * @property {string[]} ['error-codes'] - The error codes if the token is invalid
+ */
+export interface RecaptchaResponse {
+  success: boolean
+  challenge_ts: string
+  hostname: string
+  score?: number
+  action?: string
+  'error-codes'?: string[]
 }

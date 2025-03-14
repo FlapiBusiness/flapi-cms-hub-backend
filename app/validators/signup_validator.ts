@@ -8,8 +8,14 @@ import type User from '#models/user'
 // eslint-disable-next-line @typescript-eslint/typedef
 export const signUpValidator = vine.compile(
   vine.object({
-    lastname: vine.string().trim(),
-    firstname: vine.string().trim(),
+    lastname: vine
+      .string()
+      .regex(/^[A-Za-zÀ-ÖØ-öø-ÿ'-]+(?: [A-Za-zÀ-ÖØ-öø-ÿ'-]+)*$/)
+      .trim(),
+    firstname: vine
+      .string()
+      .regex(/^[A-Za-zÀ-ÖØ-öø-ÿ'-]+(?: [A-Za-zÀ-ÖØ-öø-ÿ'-]+)*$/)
+      .trim(),
     email: vine
       .string()
       .normalizeEmail()
@@ -29,6 +35,7 @@ export const signUpValidator = vine.compile(
       .trim()
       .minLength(8)
       .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d\s])[A-Za-z\d\S]{8,}$/),
+    recaptcha_token: vine.string().trim(),
   }),
 )
 
@@ -53,4 +60,9 @@ vine.messagesProvider = new SimpleMessagesProvider({
   // Erreurs pour prénom et nom de famille
   'firstname.required': 'Le prénom est obligatoire.',
   'lastname.required': 'Le nom de famille est obligatoire.',
+  'firstname.regex': 'Le prénom ne doit contenir que des lettres.',
+  'lastname.regex': 'Le nom de famille ne doit contenir que des lettres.',
+
+  // Erreur pour le token reCAPTCHA
+  'recaptcha_token.required': 'Le token reCAPTCHA est obligatoire.',
 })
