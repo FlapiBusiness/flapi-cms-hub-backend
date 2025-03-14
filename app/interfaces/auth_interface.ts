@@ -17,6 +17,7 @@ export interface LoginSuccessResponse {
  * @property {string} email - The user email
  * @property {string} password - The user password
  * @property {string} password_confirmation - The user password confirmation
+ * @property {string} recaptcha_token - The reCAPTCHA token
  */
 export interface SignUpPayload {
   lastname: string
