@@ -415,23 +415,25 @@ export class {{classname}} {
      * @memberof {{classname}}
      */
     {{#useSingleRequestParameter}}
-    public static async {{nickname}}({{#allParams.0}}requestParameters: {{classname}}{{operationIdCamelCase}}Request{{^hasRequiredParams}} = {}{{/hasRequiredParams}}, {{/allParams.0}}options?: RawAxiosRequestConfig): Promise<AxiosResponse<{{{returnType}}}, any>> {
+    public static async {{nickname}}({{#allParams.0}}requestParameters: {{classname}}{{operationIdCamelCase}}Request{{^hasRequiredParams}} = {}{{/hasRequiredParams}}, {{/allParams.0}}options?: RawAxiosRequestConfig):  Promise<AxiosResponse<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/returnType}}, any>> {
         const localVarAxiosArgs = await {{classname}}AxiosParamCreator().{{nickname}}({{#allParams.0}}{{#allParams}}requestParameters.{{paramName}}, {{/allParams}}{{/allParams.0}}options);
-        return globalAxios.request<{{{returnType}}}>({
+        return globalAxios.request<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/returnType}}, any>({
             ...localVarAxiosArgs.options,
             url: BASE_PATH + localVarAxiosArgs.url
         });
     }
     {{/useSingleRequestParameter}}
     {{^useSingleRequestParameter}}
-    public static async {{nickname}}({{#allParams}}{{paramName}}{{^required}}?{{/required}}: {{#isEnum}}{{{datatypeWithEnum}}}{{/isEnum}}{{^isEnum}}{{{dataType}}}{{#isNullable}} | null{{/isNullable}}{{/isEnum}}, {{/allParams}}options?: RawAxiosRequestConfig): Promise<AxiosResponse<{{{returnType}}}, any>> {
+    public static async {{nickname}}({{#allParams}}{{paramName}}{{^required}}?{{/required}}: {{#isEnum}}{{{datatypeWithEnum}}}{{/isEnum}}{{^isEnum}}{{{dataType}}}{{#isNullable}} | null{{/isNullable}}{{/isEnum}}, {{/allParams}}options?: RawAxiosRequestConfig):  Promise<AxiosResponse<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/returnType}}, any>> {
         const localVarAxiosArgs = await {{classname}}AxiosParamCreator().{{nickname}}({{#allParams}}{{paramName}}, {{/allParams}}options);
-        return globalAxios.request<{{{returnType}}}>({
+        return globalAxios.request<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/returnType}}, any>({
             ...localVarAxiosArgs.options,
             url: BASE_PATH + localVarAxiosArgs.url
         });
     }
     {{/useSingleRequestParameter}}
+
+
 
     {{^-last}}
 

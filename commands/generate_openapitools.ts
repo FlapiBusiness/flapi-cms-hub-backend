@@ -1,7 +1,7 @@
 import { BaseCommand } from '@adonisjs/core/ace'
 import type { CommandOptions } from '@adonisjs/core/types/ace'
 import { execSync } from 'child_process'
-import { fixBasePath } from '#scripts/fix-openapitools'
+import { fixOpenApiTools } from '#scripts/fix-openapitools'
 
 /**
  * Commande pour générer l'API OpenAPI Tools
@@ -34,7 +34,7 @@ export default class GenerateOpenApiTools extends BaseCommand {
 
     // 📍 Étape 3 : Vérifier et corriger BASE_PATH dans base.ts
     this.logger.info('🔧 Correction du fichier BASE_PATH en cours...')
-    fixBasePath()
+    fixOpenApiTools()
     this.logger.success('✅ BASE_PATH modifié avec succès.')
   }
 }
