@@ -112,6 +112,13 @@ export default class KeycloakAdminService {
       if (!keycloakUserId) {
         throw new Error("Impossible de récupérer l'ID Keycloak de l'utilisateur.")
       }
+      console.log({
+        access_token,
+        refresh_token,
+        expires_in,
+        session_state,
+        keycloakUserId,
+      })
 
       // Étape 3 : Trouver l'utilisateur dans ta base de données via `keycloakUserId`
       const user: User = await User.findByOrFail('keycloak_user_id', keycloakUserId)

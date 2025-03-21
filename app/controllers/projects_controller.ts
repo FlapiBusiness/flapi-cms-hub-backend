@@ -95,8 +95,8 @@ export default class ProjectsController {
    * @param {HttpContext['params']} ctx.params - The HTTP params object
    */
   public async getProjectByUserId({ response, params }: HttpContext): Promise<void> {
-    const project: Project[] = await ProjectService.getProjectByUserId(params.user_id)
-    response.status(200).json(project)
+    const projects: Project[] = await ProjectService.getProjectByUserId(params.user_id)
+    response.status(200).json(projects)
   }
 
   /**

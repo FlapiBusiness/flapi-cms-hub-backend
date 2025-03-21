@@ -1,6 +1,6 @@
 import { CamelCaseNamingStrategy } from '@adonisjs/lucid/orm'
 import type { BaseModel } from '@adonisjs/lucid/orm'
- 
+
 /**
  * A naming strategy that preserves the snake_case naming convention for serialization.
  * @class PreserveSnakeCaseNamingStrategy
