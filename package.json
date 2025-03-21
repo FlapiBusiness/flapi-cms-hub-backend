@@ -143,8 +143,8 @@
     "#tests/*": "./tests/*.js",
     "#config/*": "./config/*.js",
     "#enums/*": "./app/enums/*.js",
-    "#dto/*": "./app/dto/*.js",
     "#types/*": "./app/types/*.js",
-    "#scripts/*": "./scripts/*.js"
+    "#scripts/*": "./scripts/*.js",
+    "#orm/*": "./app/orm/*.js"
   }
 }
