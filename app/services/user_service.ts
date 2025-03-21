@@ -1,6 +1,7 @@
 // app/Services/UserService.ts
 import User from '#models/user'
 import type { UpdateUserPayload } from '#interfaces/user_interface'
+import KeycloakAdminService from '#services/keycloack_admin_service'
 
 /**
  * Service to handle user operations
@@ -38,9 +39,8 @@ export default class UserService {
    */
   public static async updateUser(userId: number, data: UpdateUserPayload): Promise<User> {
     const user: User = await User.findOrFail(userId)
-    user.merge(data)
-    await user.save()
-    return user
+    await KeycloakAdminService.updateUser(user.keycloakUserId, data)
+    return await user.merge(data).save()
   }
 
   /**

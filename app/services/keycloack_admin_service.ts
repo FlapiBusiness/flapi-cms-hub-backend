@@ -8,6 +8,7 @@ import type UserRepresentation from '@keycloak/keycloak-admin-client/lib/defs/us
 import User from '#models/user'
 import UserSession from '#models/user_session'
 import { DateTime } from 'luxon'
+import type { UpdateUserPayload } from '#interfaces/user_interface'
 
 /**
  * Service pour gérer les utilisateurs Keycloak
@@ -176,6 +177,23 @@ export default class KeycloakAdminService {
   }
 
   /**
+   * Réinitialise le mot de passe d'un utilisateur dans Keycloak
+   * @param {string} keycloakUserId - ID Keycloak de l'utilisateur
+   * @param {string} password - Nouveau mot de passe
+   * @returns {Promise<void>}
+   */
+  public static async resetPassword(keycloakUserId: string, password: string): Promise<void> {
+    await this.kcAdmin.users.resetPassword({
+      id: keycloakUserId,
+      credential: {
+        type: 'password',
+        value: password,
+        temporary: false, // False pour que le mot de passe soit permanent
+      },
+    })
+  }
+
+  /**
    * Crée un utilisateur dans Keycloak
    * @param {string} email - Email de l'utilisateur
    * @param {string} password - Mot de passe de l'utilisateur
@@ -211,14 +229,7 @@ export default class KeycloakAdminService {
       }
 
       // Étape 3 : Définition du mot de passe
-      await this.kcAdmin.users.resetPassword({
-        id: createdUser.id,
-        credential: {
-          type: 'password',
-          value: password,
-          temporary: false, // False pour que le mot de passe soit permanent
-        },
-      })
+      await this.resetPassword(createdUser.id, password)
 
       logger.info(`Utilisateur cree avec succes: ${email}`)
       console.log({
@@ -227,6 +238,39 @@ export default class KeycloakAdminService {
       return createdUser.id
     } catch (error: any) {
       throw new Error(`Echec de la creation de l utilisateur, erreur Keycloak: ${error.message}`)
+    }
+  }
+
+  /**
+   * Met à jour un utilisateur dans Keycloak
+   * @param {string} keycloakUserId - ID de l'utilisateur Keycloak
+   * @param {UpdateUserPayload} payload - Champs à mettre à jour
+   * @returns {Promise<void>}
+   */
+  public static async updateUser(keycloakUserId: string, payload: UpdateUserPayload): Promise<void> {
+    await this.authenticateAdmin()
+
+    try {
+      const updates: Partial<UserRepresentation> = {
+        firstName: payload.firstname,
+        lastName: payload.lastname,
+        email: payload.email,
+        username: payload.email,
+      }
+
+      // Met à jour les infos générales si nécessaires
+      if (Object.keys(updates).length > 0) {
+        await this.kcAdmin.users.update({ id: keycloakUserId }, updates)
+        logger.info(`Utilisateur Keycloak ${keycloakUserId} mis à jour avec succès.`)
+      }
+
+      // Met à jour le mot de passe si les champs sont présents et valides
+      if (payload.password && payload.password_confirmation && payload.password === payload.password_confirmation) {
+        await this.resetPassword(keycloakUserId, payload.password)
+        logger.info(`Mot de passe de l'utilisateur ${keycloakUserId} mis à jour avec succès.`)
+      }
+    } catch (error: any) {
+      throw new Error(`Échec de la mise à jour de l'utilisateur, erreur Keycloak : ${error.message}`)
     }
   }
 
