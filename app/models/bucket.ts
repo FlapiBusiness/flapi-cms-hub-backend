@@ -15,8 +15,8 @@ export default class Bucket extends BaseModel {
   declare public visibility: string
 
   @column.dateTime({ autoCreate: true })
-  declare public createdAt: DateTime
+  declare public created_at: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare public updatedAt: DateTime
+  declare public updated_at: DateTime
 }

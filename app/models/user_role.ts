@@ -21,11 +21,11 @@ export default class UserRole extends BaseModel {
    * La date de création du rôle.
    */
   @column.dateTime({ autoCreate: true })
-  declare public createdAt: DateTime
+  declare public created_at: DateTime
 
   /**
    * La date de mise à jour du rôle.
    */
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare public updatedAt: DateTime | null
+  declare public updated_at: DateTime | null
 }

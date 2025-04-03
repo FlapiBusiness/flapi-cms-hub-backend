@@ -99,12 +99,12 @@ export default class Project extends BaseModel {
    */
   @column.dateTime({ autoCreate: true })
   // @required @example('2022-01-01T00:00:00.000Z')
-  declare public createdAt: DateTime
+  declare public created_at: DateTime
 
   /**
    * The timestamp when the project was last updated.
    */
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   // @required @example('2022-01-01T00:00:00.000Z')
-  declare public updatedAt: DateTime
+  declare public updated_at: DateTime
 }

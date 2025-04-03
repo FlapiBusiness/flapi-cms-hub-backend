@@ -30,11 +30,11 @@ export default class Team extends BaseModel {
 
   @column.dateTime({ autoCreate: true })
   // @required @example('2021-01-01T00:00:00.000Z')
-  declare public createdAt: DateTime
+  declare public created_at: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   // @required @example('2021-01-01T00:00:00.000Z')
-  declare public updatedAt: DateTime
+  declare public updated_at: DateTime
 
   /**
    * Relation many-to-many avec les utilisateurs via la table pivot 'user_team'

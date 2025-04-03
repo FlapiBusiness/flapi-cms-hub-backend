@@ -33,6 +33,20 @@ services:
     networks:
       - app-network
 
+  nats:
+    image: nats:latest
+    container_name: nats
+    ports:
+      - '4222:4222' # Port NATS classique (TCP)
+      - '8222:8222' # Port Monitoring NATS (HTTP)
+      - '9222:9222' # Port Monitoring NATS (WebSocket)
+    volumes:
+      - ./nats-server.conf:/etc/nats/nats-server.conf
+    command: ['-c', '/etc/nats/nats-server.conf']
+    restart: always
+    networks:
+      - app-network
+
   phpmyadmin:
     container_name: phpmyadmin
     image: phpmyadmin/phpmyadmin

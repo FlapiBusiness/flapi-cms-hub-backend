@@ -3,8 +3,10 @@ import type { HttpContext } from '@adonisjs/core/http'
 import logger from '@adonisjs/core/services/logger'
 import { checkDomainAvailabilityValidator } from '#validators/check_domain_availability_validator'
 import { checkSubDomainAvailabilityValidator } from '#validators/check_sub_domain_availability_validator'
-import type { CheckDomainAvailabilityPayload } from '#validators/check_domain_availability_validator'
-import type { CheckSubDomainAvailabilityPayload } from '#validators/check_sub_domain_availability_validator'
+import type {
+  CheckDomainAvailabilityPayload,
+  CheckSubDomainAvailabilityPayload,
+} from '#interfaces/aws_domain_interface'
 
 /**
  * Contrôleur pour gérer les opérations liées aux domaines AWS via Route 53.
@@ -17,7 +19,7 @@ export default class AWSDomainController {
    * @tag AWS Domain
    * @summary Vérifie la disponibilité d'un domaine
    * @description Vérifie si un domaine est disponible via AWS Route 53 Domains
-   * @requestBody <checkDomainAvailabilityValidator>
+   * @requestBody <CheckDomainAvailabilityPayload>
    * @required domain
    * @content application/json
    * @responseBody 200 - <AwsDomainResponse>
@@ -46,7 +48,7 @@ export default class AWSDomainController {
    * @tag AWS Domain
    * @summary Vérifie la disponibilité d'un sous-domaine
    * @description Vérifie si un sous-domaine est disponible via AWS Route 53 Domains
-   * @requestBody <checkSubDomainAvailabilityValidator>
+   * @requestBody <CheckSubDomainAvailabilityPayload>
    * @content application/json
    * @responseBody 200 - <AwsDomainResponse>
    * @responseBody 500 - <ResultMessageResponse>

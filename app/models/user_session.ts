@@ -76,11 +76,11 @@ export default class UserSession extends BaseModel {
    * La date de création de la session.
    */
   @column.dateTime({ autoCreate: true })
-  declare public createdAt: DateTime
+  declare public created_at: DateTime
 
   /**
    * La date de mise à jour de la session.
    */
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare public updatedAt: DateTime
+  declare public updated_at: DateTime
 }

@@ -4,6 +4,7 @@ import logger from '@adonisjs/core/services/logger'
 import KeycloakAdminService from '#services/keycloack_admin_service'
 import UserRole from '#models/user_role'
 import { UserRoles } from '#enums/user_roles'
+import AuthEvent from '#events/signup_event'
 
 /**
  * Service to handle user sign up operations
@@ -19,7 +20,7 @@ export default class AuthService {
     try {
       /**
        * Créer un nouvel utilisateur dans Keycloak.
-       * Egalement, ajouter le rôle par défaut ADMIN_CLIENT pour les nouveaux utilisateurs dans Keycloak.
+       * Également, ajouter le rôle par défaut ADMIN_CLIENT pour les nouveaux utilisateurs dans Keycloak.
        */
       const keycloakUserId: string = await KeycloakAdminService.createUser(
         data.email,
@@ -40,13 +41,15 @@ export default class AuthService {
       /**
        * Créer un nouvel utilisateur dans la base de données de Flapi.
        */
-      await User.create({
+      const user: User = await User.create({
         roleId: defaultRole.id,
         keycloakUserId: keycloakUserId,
         lastname: data.lastname,
         firstname: data.firstname,
         email: data.email,
       })
+
+      await AuthEvent.dispatch(user)
 
       /**
        * Authentifier l'admin Keycloak après inscription d'un nouvel utilisateur.

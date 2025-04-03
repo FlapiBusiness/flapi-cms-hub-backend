@@ -4,7 +4,7 @@ import logger from '@adonisjs/core/services/logger'
 import O2SwitchService from '#services/o2switch_service'
 import AWSDomainService from '#services/aws_domain_service'
 import { createNewApplicationValidator } from '#validators/create_new_application_validator'
-import type { CreateNewApplicationPayload } from '#validators/create_new_application_validator'
+import type { CreateNewApplicationPayload } from '#interfaces/client_interface'
 import env from '#start/env'
 
 /**
@@ -18,7 +18,7 @@ export default class ClientController {
    * @tag Client
    * @summary Créer une nouvelle application
    * @description Crée un repository GitHub à partir d'un template.
-   * @requestBody <createNewApplicationValidator>
+   * @requestBody <CreateNewApplicationPayload>
    * @conent application/json
    * @responseBody 201 - <ResultMessageResponse>
    * @responseBody 400 - <ResultMessageResponse>
@@ -45,7 +45,7 @@ export default class ClientController {
 
     const workflowName: string = '.github/workflows/init-update-files-and-push.yaml'
     const workflowBranch: string = 'develop'
-    const workflowInputs: CreateNewApplicationPayload = payload
+    const workflowInputs: Record<string, string> = { ...payload }
 
     const environments: string[] = ['dev.', 'staging.', ''] // '' = pour la production
     const suffixes: string[] = ['', '.api']

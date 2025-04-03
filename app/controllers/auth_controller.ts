@@ -2,7 +2,6 @@ import type { HttpContext } from '@adonisjs/core/http'
 import AuthService from '#services/auth_service'
 import { signUpValidator } from '#validators/signup_validator'
 import BadRequestException from '#exceptions/bad_request_exception'
-import logger from '@adonisjs/core/services/logger'
 import type { SignUpPayload } from '#interfaces/auth_interface'
 import KeycloakAdminService from '#services/keycloack_admin_service'
 import type UserSession from '#models/user_session'
@@ -166,26 +165,19 @@ export default class AuthController {
   /**
    * Logout user from all sessions
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
-   * @param {HttpContext['auth']} ctx.auth - The authentication object
    * @param {HttpContext['response']} ctx.response - The HTTP response object
+   * @param {HttpContext['request']} ctx.request - The HTTP request object
    * @returns {Promise<void>} - A promise that resolves with no return value
    */
-  public async signOut({ auth, response }: HttpContext): Promise<void> {
-    try {
-      // Vérifier si l'utilisateur est authentifié
-      if (await auth.use('api').check()) {
-        // Récupérer l'utilisateur actuel
+  public async signOut({ response, request }: HttpContext): Promise<void> {
+    const accessToken: string | undefined = request.header('Authorization')?.replace('Bearer ', '')
 
-        // Révoquer tous les tokens de l'utilisateur
-
-        // Répondre avec succès
-        response.status(200).json({ message: 'Logged out from all sessions' })
-      }
-
-      response.unauthorized({ message: 'No active session found' })
-    } catch (error: any) {
-      logger.error(error)
-      response.internalServerError({ message: 'Unable to logout' })
+    if (!accessToken) {
+      return response.unauthorized({ error: 'Token manquant' })
     }
+
+    await KeycloakAdminService.logoutUser(accessToken)
+
+    return response.status(200).json({ message: 'Logged out from all sessions' })
   }
 }

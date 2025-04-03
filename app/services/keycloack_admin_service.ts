@@ -9,6 +9,10 @@ import User from '#models/user'
 import UserSession from '#models/user_session'
 import { DateTime } from 'luxon'
 import type { UpdateUserPayload } from '#interfaces/user_interface'
+import SignInEvent from '#events/signin_event'
+import SignOutEvent from '#events/signout_event'
+import InternalServerErrorException from '#exceptions/internal_server_error_exception'
+import UnauthorizedException from '#exceptions/unauthorized_exception'
 
 /**
  * Service pour gérer les utilisateurs Keycloak
@@ -125,7 +129,7 @@ export default class KeycloakAdminService {
       const user: User = await User.findByOrFail('keycloak_user_id', keycloakUserId)
 
       // Étape 4 : Stocker la session avec les tokens
-      return await UserSession.create({
+      const userSession: UserSession = await UserSession.create({
         userId: user.id,
         sessionState: session_state,
         issuer: 'https://dev.auth.flapi.org/realms/master',
@@ -135,6 +139,10 @@ export default class KeycloakAdminService {
         refreshToken: refresh_token,
         expiresAt: DateTime.now().plus({ seconds: expires_in }),
       })
+
+      await SignInEvent.dispatch(user)
+
+      return userSession
     } catch (error: any) {
       console.log({ error })
       throw new Error("Échec de l'échange du code contre un token : " + error.message)
@@ -330,7 +338,6 @@ export default class KeycloakAdminService {
    */
   public static async sessionIsValid(access_token: string): Promise<boolean> {
     try {
-      console.log({ access_token })
       await this.keycloakAxios.get('/userinfo', {
         headers: { Authorization: `Bearer ${access_token}` },
       })
@@ -346,23 +353,39 @@ export default class KeycloakAdminService {
 
   /**
    * Déconnecte un utilisateur en invalidant son access_token
-   * @param {string} refreshToken - Refresh token de l'utilisateur
+   * @param {string} accessToken - Token d'accès de l'utilisateur
    * @returns {Promise<void>}
    */
-  public static async logoutUser(refreshToken: string): Promise<void> {
+  public static async logoutUser(accessToken: string): Promise<void> {
     try {
+      const user: User | null = await this.getAuthenticatedUser(accessToken)
+
+      if (!user) {
+        throw new UnauthorizedException('Utilisateur non trouvé ou token invalide')
+      }
+
+      // Récupérer le refresh_token de la session utilisateur
+      const session: UserSession | null = await UserSession.findBy('userId', user.id)
+
+      if (!session) {
+        throw new InternalServerErrorException('Session utilisateur introuvable')
+      }
+
       await this.keycloakAxios.post(
         '/logout',
         new URLSearchParams({
           client_id: env.get('KEYCLOAK_CLIENT_ID'),
           client_secret: env.get('KEYCLOAK_CLIENT_SECRET'),
-          refresh_token: refreshToken,
+          refresh_token: session.refreshToken,
         }),
       )
 
-      logger.info('Utilisateur deconnecte avec succes')
+      await SignOutEvent.dispatch(user)
+
+      logger.info('Utilisateur déconnecté avec succès')
     } catch (error: any) {
-      throw new Error('Echec de la deconnexion, erreur Keycloak : ' + error.message)
+      logger.error(error)
+      throw new Error('Échec de la déconnexion, erreur Keycloak : ' + error.message)
     }
   }
 }

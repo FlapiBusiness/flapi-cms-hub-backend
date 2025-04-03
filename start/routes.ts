@@ -12,6 +12,7 @@ import './routes/project.js'
 import './routes/database.js'
 import './routes/user.js'
 import './routes/team.js'
+import './routes/application_event_log.js'
 
 /**
  * Cette route est utilisée pour tester le fonctionnement de base de l'application,

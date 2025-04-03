@@ -111,14 +111,14 @@ export default class User extends BaseModel {
    */
   @column.dateTime({ autoCreate: true })
   // @required @example('2022-01-01T12:00:00.000Z')
-  declare public createdAt: DateTime
+  declare public created_at: DateTime
 
   /**
    * The timestamp when the user was last updated.
    */
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   // @example('2022-01-01T12:00:00.000Z')
-  declare public updatedAt: DateTime | null
+  declare public updated_at: DateTime | null
 
   /**
    * The access token provider for the user model.
@@ -131,4 +131,12 @@ export default class User extends BaseModel {
     type: 'auth_token',
     tokenSecretLength: env.get('API_USER_TOKEN_SECRET_LENGTH'),
   })
+
+  /**
+   * The full name of the user, combining the first and last name.
+   */
+  // @no-swagger
+  public get fullName(): string {
+    return this.firstname + ' ' + this.lastname
+  }
 }

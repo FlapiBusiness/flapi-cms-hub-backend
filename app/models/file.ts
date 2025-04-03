@@ -49,11 +49,11 @@ export default class File extends BaseModel {
    * The timestamp when the file was created.
    */
   @column.dateTime({ autoCreate: true })
-  declare public createdAt: DateTime
+  declare public created_at: DateTime
 
   /**
    * The timestamp when the file was last updated.
    */
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare public updatedAt: DateTime
+  declare public updated_at: DateTime
 }
