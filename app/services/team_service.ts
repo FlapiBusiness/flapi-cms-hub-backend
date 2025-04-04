@@ -1,6 +1,5 @@
 import Team from '#models/team'
 import User from '#models/user'
-import type { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
 
 /**
  * Service class for managing teams
@@ -29,11 +28,7 @@ export default class TeamService {
    * @returns {Promise<Team[]>} - Une promesse qui résout avec un tableau d'équipes
    */
   public static async getTeamsByUserId(userId: number): Promise<Team[]> {
-    return Team.query()
-      .preload('users')
-      .whereHas('users', (query: ModelQueryBuilderContract<typeof User>) => {
-        query.where('id', userId)
-      })
+    return Team.query().where('owner_id', userId).preload('users').preload('projects')
   }
 
   /**
