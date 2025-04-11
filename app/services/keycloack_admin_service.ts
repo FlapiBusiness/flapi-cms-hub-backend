@@ -78,6 +78,8 @@ export default class KeycloakAdminService {
         throw new Error('Utilisateur non trouvé dans la base de données.')
       }
 
+      await user.load('role')
+
       return user
     } catch (error: any) {
       logger.warn("Échec de la récupération de l'utilisateur authentifié : ", error.message)

@@ -12,7 +12,7 @@ export default class UserService {
    * Récupère tous les utilisateurs.
    */
   public static async getAllUsers(): Promise<User[]> {
-    return await User.all()
+    return User.query().preload('role')
   }
 
   /**
@@ -39,7 +39,7 @@ export default class UserService {
    */
   public static async updateUser(userId: number, data: UpdateUserPayload): Promise<User> {
     const user: User = await User.findOrFail(userId)
-    await KeycloakAdminService.updateUser(user.keycloakUserId, data)
+    await KeycloakAdminService.updateUser(user.keycloak_user_id, data)
     return await user.merge(data).save()
   }
 

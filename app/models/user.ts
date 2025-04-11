@@ -23,20 +23,20 @@ export default class User extends BaseModel {
    */
   @column()
   // @required @example('12345678-1234-1234-1234-123456789012')
-  declare public keycloakUserId: string
+  declare public keycloak_user_id: string
 
   /**
    * The role ID associated with the user.
    */
   @column()
   // @required @example(1)
-  declare public roleId: number
+  declare public role_id: number
 
   /**
    * The relationship to the Role model.
    */
   @belongsTo(() => UserRole, {
-    foreignKey: 'roleId',
+    foreignKey: 'role_id',
   })
   // @required
   declare public role: BelongsTo<typeof UserRole>
@@ -67,28 +67,28 @@ export default class User extends BaseModel {
    */
   @column()
   // @example('USD')
-  declare public currencyCode: string | null
+  declare public currency_code: string | null
 
   /**
    * The user's IP address.
    */
   @column()
   // @example('0.0.0.0')
-  declare public ipAddress: string | null
+  declare public ip_address: string | null
 
   /**
    * The region of the IP address associated with the user.
    */
   @column()
   // @example('FR')
-  declare public ipRegion: string | null
+  declare public ip_region: string | null
 
   /**
    * The Stripe customer ID associated with the user.
    */
   @column()
   // @example(12345678)
-  declare public stripeCustomerId: number | null
+  declare public stripe_customer_id: number | null
 
   @manyToMany(() => Team, {
     pivotTable: 'user_teams',

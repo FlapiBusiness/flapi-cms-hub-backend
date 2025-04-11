@@ -42,8 +42,8 @@ export default class AuthService {
        * Créer un nouvel utilisateur dans la base de données de Flapi.
        */
       const user: User = await User.create({
-        roleId: defaultRole.id,
-        keycloakUserId: keycloakUserId,
+        role_id: defaultRole.id,
+        keycloak_user_id: keycloakUserId,
         lastname: data.lastname,
         firstname: data.firstname,
         email: data.email,
