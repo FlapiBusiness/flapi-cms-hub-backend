@@ -30,9 +30,9 @@ export default class DocsGenerate extends BaseCommand {
     Router.commit()
 
     // Génère le fichier swagger.yml
-    await AutoSwagger.default.writeFile(Router.toJSON(), swagger).then(() => {
-      fixSwaggerJsonFile()
-      this.logger.info('Swagger documentation generated successfully.')
-    })
+    await AutoSwagger.default.writeFile(Router.toJSON(), swagger)
+
+    fixSwaggerJsonFile()
+    this.logger.info('Swagger documentation generated successfully.')
   }
 }

@@ -100,7 +100,7 @@ export class GitHubService {
     repo: string,
     workflowName: string,
     ref: string,
-    inputs: Record<string, string>,
+    inputs: Record<string, string | number>,
   ): Promise<boolean> {
     // Encoder le nom du fichier pour l'URL
     const encodedWorkflowName: string = encodeURIComponent(workflowName)

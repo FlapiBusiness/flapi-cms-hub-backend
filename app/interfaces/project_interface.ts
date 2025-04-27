@@ -1,10 +1,13 @@
 /**
  * UpdateProjectPayload
- * @property {string} application_name - The name of the application
- * @property {number} user_id - The ID of the user
- * @property {string} domain_name - The domain name
- * @property {number} file_id - The ID of the file
- * @property {number} database_id - The ID of the database
+ * @property {number} [customer_user_id] - The ID of the customer user
+ * @property {string} [customer_name] - The name of the customer
+ * @property {string} [application_name] - The name of the application
+ * @property {string} [domain_name] - The domain name
+ * @property {string} [short_description] - A short description of the project
+ * @property {string} [long_description] - A long description of the project
+ * @property {string} [category] - The category of the project
+ * @property {number} [project_setup_id] - The ID of the project setup
  */
 export interface UpdateProjectPayload {
   application_name?: string
@@ -12,20 +15,27 @@ export interface UpdateProjectPayload {
   domain_name?: string
   file_id?: number
   database_id?: number
+  project_setup_id?: number
 }
 
 /**
- * ProjectPayload
+ * CreateProjectPayload
+ * @property {number} customer_user_id - The ID of the customer user
+ * @property {string} customer_name - The name of the customer
  * @property {string} application_name - The name of the application
- * @property {number} user_id - The ID of the user
  * @property {string} domain_name - The domain name
- * @property {number} file_id - The ID of the file
- * @property {number} database_id - The ID of the database
+ * @property {string} [short_description] - A short description of the project
+ * @property {string} [long_description] - A long description of the project
+ * @property {string} [category] - The category of the project
+ * @property {number} [project_setup_id] - The ID of the project setup
  */
 export interface CreateProjectPayload {
+  customer_user_id: number
+  customer_name: string
   application_name: string
-  user_id: number
   domain_name: string
-  file_id: number
-  database_id: number
+  short_description?: string
+  long_description?: string
+  category?: string
+  project_setup_id?: number
 }

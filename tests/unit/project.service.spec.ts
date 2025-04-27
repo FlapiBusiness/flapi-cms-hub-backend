@@ -11,10 +11,9 @@ type TestContext = { assert: Assert }
 test('should create a project', async ({ assert }: TestContext) => {
   const project: Project = await ProjectService.createProject({
     application_name: 'Test App',
-    user_id: 1,
+    customer_user_id: 1,
     domain_name: 'example.com',
-    database_id: 1,
-    file_id: 1,
+    customer_name: 'Test Customer',
   })
   assert.exists(project.id)
 })

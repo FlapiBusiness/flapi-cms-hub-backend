@@ -5,6 +5,7 @@ import User from '#models/user'
 import File from '#models/file'
 import Database from '#models/database'
 import Team from '#models/team'
+import ProjectSetup from '#models/project_setup'
 
 /**
  * The Project model represents a project in the application.
@@ -32,12 +33,27 @@ export default class Project extends BaseModel {
   declare public user_id: number
 
   /**
+   * The ID of the project setup associated with the project.
+   */
+  @column()
+  // @required @example(1)
+  declare public project_setup_id: number
+
+  /**
    * The relationship to the User model.
    */
   @belongsTo((): typeof User => User, {
     foreignKey: 'user_id',
   })
   declare public user: BelongsTo<typeof User>
+
+  /**
+   * The relationship to the ProjectSetup model.
+   */
+  @belongsTo((): typeof ProjectSetup => ProjectSetup, {
+    foreignKey: 'project_setup_id',
+  })
+  declare public project_setup: BelongsTo<typeof ProjectSetup>
 
   /**
    * The domain name of the project.

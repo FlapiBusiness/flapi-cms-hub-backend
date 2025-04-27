@@ -6,7 +6,9 @@ import Project from '#models/project'
 import User from '#models/user'
 import Database from '#models/database'
 import Team from '#models/team'
-
+import type ProjectSetup from '#models/project_setup'
+import ProjectSetupEvent from '#events/project_setup_event'
+import ClientService from '#services/client_service'
 /**
  * Service to handle project operations
  * @class ProjectService
@@ -22,22 +24,22 @@ export default class ProjectService {
       // Create the project
       const project: Project = await Project.create({
         application_name: payload.application_name,
-        user_id: payload.user_id,
+        user_id: payload.customer_user_id,
+        project_setup_id: payload.project_setup_id,
         domain_name: payload.domain_name,
-        file_id: payload.file_id,
-        database_id: payload.database_id,
       })
-      const user: User = await User.findByOrFail('id', payload.user_id)
+      const user: User = await User.findByOrFail('id', payload.customer_user_id)
 
-      const db: Database | null = await Database.findBy('id', payload.database_id)
       await MailService.sendEmail(user.email, 'project-created', 'Project Created', {
         username: user.firstname + ' ' + user.lastname,
         appName: payload.application_name,
         domainName: payload.domain_name,
-        databaseName: db?.name,
         redirect_uri:
           env.get('FRONTEND_APP_BASE_URL') + env.get('FRONTEND_APP_REDIRECT_URI_ACCOUNT_VALIDATE') + user.email,
       })
+
+      ClientService.createNewApplication(project.id, payload)
+
       return project
     } catch (error: any) {
       logger.error(error)
@@ -160,5 +162,24 @@ export default class ProjectService {
     const project: Project = await Project.findOrFail(projectId)
     await project.related('teams').detach([teamId])
     return project
+  }
+
+  /**
+   * Update Project Setup
+   * @param {ProjectSetup} projectSetup - The project setup to update
+   * @returns {Promise<void>} - A promise that resolves with no return value
+   */
+  public static async updateProjectSetup(projectSetup: ProjectSetup): Promise<void> {
+    try {
+      // Update the project
+      await this.updateProject(projectSetup.project_id, {
+        project_setup_id: projectSetup.id,
+      })
+      // Dispatch the event
+      await ProjectSetupEvent.dispatch(projectSetup)
+    } catch (err: any) {
+      logger.error(err)
+      throw err
+    }
   }
 }

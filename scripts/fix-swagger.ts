@@ -132,6 +132,3 @@ export const fixSwaggerJsonFile = (): void => {
   fs.writeFileSync(SWAGGER_PATH, JSON.stringify(swagger, null, 2), 'utf8')
   console.log('✅ Swagger.json corrigé avec succès !')
 }
-
-// Exécute la correction
-fixSwaggerJsonFile()

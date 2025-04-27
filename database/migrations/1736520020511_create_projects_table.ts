@@ -11,6 +11,7 @@ export default class extends BaseSchema {
       table.string('domain_name').notNullable()
       table.integer('file_id').unsigned().references('id').inTable('files')
       table.integer('database_id').unsigned().references('id').inTable('databases')
+      table.integer('project_setup_id').nullable().unsigned().references('id').inTable('project_setups')
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })
