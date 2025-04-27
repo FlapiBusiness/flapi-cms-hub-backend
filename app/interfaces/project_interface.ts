@@ -4,17 +4,19 @@
  * @property {string} [customer_name] - The name of the customer
  * @property {string} [application_name] - The name of the application
  * @property {string} [domain_name] - The domain name
- * @property {string} [short_description] - A short description of the project
- * @property {string} [long_description] - A long description of the project
- * @property {string} [category] - The category of the project
+ // * @property {string} [short_description] - A short description of the project
+ // * @property {string} [long_description] - A long description of the project
+ // * @property {string} [category] - The category of the project
  * @property {number} [project_setup_id] - The ID of the project setup
  */
 export interface UpdateProjectPayload {
+  customer_user_id?: number
+  customer_name?: string
   application_name?: string
-  user_id?: number
   domain_name?: string
-  file_id?: number
-  database_id?: number
+  // short_description?: string
+  // long_description?: string
+  // category?: string
   project_setup_id?: number
 }
 
@@ -24,9 +26,9 @@ export interface UpdateProjectPayload {
  * @property {string} customer_name - The name of the customer
  * @property {string} application_name - The name of the application
  * @property {string} domain_name - The domain name
- * @property {string} [short_description] - A short description of the project
- * @property {string} [long_description] - A long description of the project
- * @property {string} [category] - The category of the project
+ // * @property {string} [short_description] - A short description of the project
+ // * @property {string} [long_description] - A long description of the project
+ // * @property {string} [category] - The category of the project
  * @property {number} [project_setup_id] - The ID of the project setup
  */
 export interface CreateProjectPayload {
@@ -34,8 +36,8 @@ export interface CreateProjectPayload {
   customer_name: string
   application_name: string
   domain_name: string
-  short_description?: string
-  long_description?: string
-  category?: string
+  // short_description?: string
+  // long_description?: string
+  // category?: string
   project_setup_id?: number
 }

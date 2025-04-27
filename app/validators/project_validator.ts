@@ -16,9 +16,9 @@ export const createProjectValidator = vine.compile(
     customer_name: vine.string().trim(),
     application_name: vine.string().trim().minLength(3).maxLength(255),
     domain_name: vine.string(),
-    short_description: vine.string().trim().optional(),
-    long_description: vine.string().trim().optional(),
-    category: vine.string().trim().optional(),
+    // short_description: vine.string().trim().optional(),
+    // long_description: vine.string().trim().optional(),
+    // category: vine.string().trim().optional(),
     project_setup_id: vine
       .number()
       .exists(async (db: Database, value: number) => {
@@ -42,9 +42,9 @@ export const updateProjectValidator = vine.compile(
     customer_name: vine.string().trim().optional(),
     application_name: vine.string().trim().minLength(3).maxLength(255).optional(),
     domain_name: vine.string().optional(),
-    short_description: vine.string().trim().optional(),
-    long_description: vine.string().trim().optional(),
-    category: vine.string().trim().optional(),
+    // short_description: vine.string().trim().optional(),
+    // long_description: vine.string().trim().optional(),
+    // category: vine.string().trim().optional(),
     project_setup_id: vine
       .number()
       .exists(async (db: Database, value: number) => {

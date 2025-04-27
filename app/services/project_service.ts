@@ -100,10 +100,9 @@ export default class ProjectService {
       await project
         .merge({
           application_name: payload.application_name,
-          user_id: payload.user_id,
+          user_id: payload.customer_user_id,
           domain_name: payload.domain_name,
-          file_id: payload.file_id,
-          database_id: payload.database_id,
+          project_setup_id: payload.project_setup_id,
         })
         .save()
       await project.refresh()
