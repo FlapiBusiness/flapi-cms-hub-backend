@@ -2,7 +2,6 @@
 import vine from '@vinejs/vine'
 import type User from '#models/user'
 import type Project from '#models/project'
-import { ApplicationEventLogActionType } from '#enums/application_event_log_action_type'
 import type { Database } from '@adonisjs/lucid/database'
 
 /**
@@ -25,7 +24,7 @@ export const createApplicationEventLogValidator = vine.compile(
         return !!project
       })
       .optional(),
-    action_type: vine.enum(Object.values(ApplicationEventLogActionType)),
+    action_type: vine.string().trim(),
     message: vine.string().trim(),
   }),
 )
