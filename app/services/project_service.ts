@@ -28,15 +28,15 @@ export default class ProjectService {
         project_setup_id: payload.project_setup_id,
         domain_name: payload.domain_name,
       })
-      const user: User = await User.findByOrFail('id', payload.customer_user_id)
+      // const user: User = await User.findByOrFail('id', payload.customer_user_id)
 
-      await MailService.sendEmail(user.email, 'project-created', 'Project Created', {
-        username: user.firstname + ' ' + user.lastname,
-        appName: payload.application_name,
-        domainName: payload.domain_name,
-        redirect_uri:
-          env.get('FRONTEND_APP_BASE_URL') + env.get('FRONTEND_APP_REDIRECT_URI_ACCOUNT_VALIDATE') + user.email,
-      })
+      // await MailService.sendEmail(user.email, 'project-created', 'Project Created', {
+      //   username: user.firstname + ' ' + user.lastname,
+      //   appName: payload.application_name,
+      //   domainName: payload.domain_name,
+      //   redirect_uri:
+      //     env.get('FRONTEND_APP_BASE_URL') + env.get('FRONTEND_APP_REDIRECT_URI_ACCOUNT_VALIDATE') + user.email,
+      // })
 
       ClientService.createNewApplication(project.id, payload)
 
@@ -53,7 +53,7 @@ export default class ProjectService {
    */
   public static async getProjects(): Promise<Project[]> {
     try {
-      return await Project.all()
+      return await Project.query().preload('teams').preload('project_setup')
     } catch (error: any) {
       logger.error(error)
       throw error
@@ -67,7 +67,7 @@ export default class ProjectService {
    */
   public static async getProjectById(id: number): Promise<Project> {
     try {
-      return await Project.query().where('id', id).preload('teams').firstOrFail()
+      return await Project.query().where('id', id).preload('teams').preload('project_setup').firstOrFail()
     } catch (error: any) {
       logger.error(error)
       throw error
@@ -81,7 +81,7 @@ export default class ProjectService {
    */
   public static async getProjectByUserId(userId: number): Promise<Project[]> {
     try {
-      return await Project.findManyBy('user_id', userId)
+      return await Project.query().where('user_id', userId).preload('teams').preload('project_setup')
     } catch (error: any) {
       logger.error(error)
       throw error
@@ -109,12 +109,12 @@ export default class ProjectService {
 
       const user: User = await User.findByOrFail('id', project.user_id)
 
-      const db: Database = await Database.findByOrFail('id', project.database_id)
+      const db: Database | null = await Database.find(project.database_id)
       await MailService.sendEmail(user.email, 'project-updated', 'Project Updated', {
         username: user.firstname + ' ' + user.lastname,
         appName: payload.application_name,
         domainName: payload.domain_name,
-        databaseName: db.name,
+        databaseName: db ? db.name : '',
         redirect_uri:
           env.get('FRONTEND_APP_BASE_URL') + env.get('FRONTEND_APP_REDIRECT_URI_ACCOUNT_VALIDATE') + user.email,
       })
@@ -170,10 +170,13 @@ export default class ProjectService {
    */
   public static async updateProjectSetup(projectSetup: ProjectSetup): Promise<void> {
     try {
-      // Update the project
-      await this.updateProject(projectSetup.project_id, {
-        project_setup_id: projectSetup.id,
-      })
+      // Update the project project_setup_id
+      const project: Project | null = await Project.find(projectSetup.project_id)
+      if (!project) {
+        throw new Error('Project not found')
+      }
+      await project.merge({ project_setup_id: projectSetup.id }).save()
+      await project.refresh()
       // Dispatch the event
       await ProjectSetupEvent.dispatch(projectSetup)
     } catch (err: any) {

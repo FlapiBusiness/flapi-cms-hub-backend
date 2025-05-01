@@ -25,45 +25,17 @@ export default class ClientService {
    * @returns {Promise<void>} A promise that resolves when the application is created.
    */
   public static async createNewApplication(projectId: number, payload: CreateProjectPayload): Promise<void> {
-    const updateProjectSetupStepStartTime: number = Date.now()
+    // Step 0: await 5 seconds to await frontend redirection
+    await delay(5000)
     await this.updateProjectSetupStep(projectId, ProjectSetupStep.SETUP_STARTED)
-    const updateProjectSetupStepEndTime: number = Date.now()
-    const updateProjectSetupStepDuration: number = updateProjectSetupStepEndTime - updateProjectSetupStepStartTime
-    console.log({
-      UPDATE_PROJECT_SETUP_STEP_DURATION: (updateProjectSetupStepDuration / 1000).toFixed(2),
-    })
     // Step 1: Check if the subdomains already exist
-    const subdomainCheckStartTime: number = Date.now()
     await this.checkSubdomainsAlreadyExist(projectId, payload.domain_name)
-    const subdomainCheckEndTime: number = Date.now()
-    const subdomainCheckDuration: number = subdomainCheckEndTime - subdomainCheckStartTime
-    console.log({
-      SUBDOMAIN_CHECK_DURATION: (subdomainCheckDuration / 1000).toFixed(2),
-    })
     // Step 2: Create the subdomains on AWS for the DEV, Staging and Prod environments
-    const createSubdomainsStartTime: number = Date.now()
     await this.createSubdomains(projectId, payload.domain_name)
-    const createSubdomainsEndTime: number = Date.now()
-    const createSubdomainsDuration: number = createSubdomainsEndTime - createSubdomainsStartTime
-    console.log({
-      CREATE_SUBDOMAINS_DURATION: (createSubdomainsDuration / 1000).toFixed(2),
-    })
     // Step 3: Create databases on O2SWitch
-    const createDatabasesStartTime: number = Date.now()
     await this.createDatabases(projectId, payload)
-    const createDatabasesEndTime: number = Date.now()
-    const createDatabasesDuration: number = createDatabasesEndTime - createDatabasesStartTime
-    console.log({
-      CREATE_DATABASE_DURATION: (createDatabasesDuration / 1000).toFixed(2),
-    })
     // Step 4: Create GitHub repositories
-    const createGitHubRepositoriesStartTime: number = Date.now()
     await this.createGitHubRepositories(projectId, payload)
-    const createGitHubRepositoriesEndTime: number = Date.now()
-    const createGitHubRepositoriesDuration: number = createGitHubRepositoriesEndTime - createGitHubRepositoriesStartTime
-    console.log({
-      CREATE_GITHUB_REPOSITORIES_DURATION: (createGitHubRepositoriesDuration / 1000).toFixed(2),
-    })
     // Step 5: Trigger workflows
     const triggerGitHubWorkflowsStartTime: number = Date.now()
     await this.triggerGitHubWorkflows(projectId, payload)
@@ -72,8 +44,8 @@ export default class ClientService {
     console.log({
       TRIGGER_GITHUB_WORKFLOWS_DURATION: (triggerGitHubWorkflowsDuration / 1000).toFixed(2),
     })
-    // Step 6: Update the project setup step to complete
-    await this.updateProjectSetupStep(projectId, ProjectSetupStep.SETUP_DONE, ProjectSetupStatus.COMPLETED)
+    // // Step 6: Update the project setup step to complete
+    // await this.updateProjectSetupStep(projectId, ProjectSetupStep.SETUP_DONE, ProjectSetupStatus.COMPLETED)
   }
 
   /**
@@ -190,10 +162,13 @@ export default class ClientService {
         if (!isCreated) {
           throw new InternalServerErrorException(`Impossible de créer le repository "${repo.name}".`)
         }
+
+        // Wait 15 seconds to let GitHub finalize the creation of repositories
+        await delay(15000)
+
+        await GitHubService.triggerWorkflowIndexingCommit(repo.name)
       }
 
-      // Wait 15 seconds to let Github finalize the creation of restitories
-      await delay(15000)
       await this.updateProjectSetupStep(projectId, ProjectSetupStep.CREATE_REPOSITORIES, ProjectSetupStatus.COMPLETED)
     } catch (error: any) {
       const errorMessage: string = error.message || 'Erreur lors de la création des repositories GitHub'
@@ -215,23 +190,32 @@ export default class ClientService {
    */
   private static async triggerGitHubWorkflows(projectId: number, payload: CreateProjectPayload): Promise<void> {
     try {
+      // Wait 15 seconds to let GitHub finalize the creation of repositories
+      await delay(15000)
+
       await this.updateProjectSetupStep(projectId, ProjectSetupStep.DEPLOYMENT)
       const githubRepositories: { template: string; name: string }[] = this.getGitHubRepositories(payload)
 
-      const workflowName: string = '.github/workflows/init-update-files-and-push.yaml'
+      const workflowPath: string = '.github/workflows/init-update-files-and-push.yaml'
       const workflowBranch: string = 'develop'
-      const workflowInputs: Record<string, string | number> = { ...payload }
+      const workflowInputs: Record<string, string> = {
+        customerName: this.sanitize(payload.customer_name),
+        projectName: this.sanitize(payload.application_name),
+        subdomain: this.sanitize(AWSDomainService.extractSubdomain(payload.domain_name)),
+        categoryApp: 'default-category',
+        longDescriptionApp: 'Longue description de l’application',
+        shortDescriptionApp: 'Description courte',
+      }
 
       for (const repo of githubRepositories) {
-        GitHubService.listWorkflows(repo.name)
-
         const workflowTriggered: boolean = await GitHubService.triggerWorkflow(
-          repo.template,
-          workflowName,
+          repo.name,
+          workflowPath,
           workflowBranch,
           workflowInputs,
         )
         if (!workflowTriggered) {
+          console.error(`Erreur lors du déclenchement du workflow pour le repository "${repo.name}".`)
           throw new InternalServerErrorException(
             `Le déclenchement du workflow pour le repository "${repo.name}" a échoué.`,
           )
@@ -240,6 +224,7 @@ export default class ClientService {
       await this.updateProjectSetupStep(projectId, ProjectSetupStep.DEPLOYMENT, ProjectSetupStatus.COMPLETED)
     } catch (error: any) {
       const errorMessage: string = error.message || 'Erreur lors du déclenchement des workflows'
+      console.error('Error triggering GitHub workflows:', JSON.stringify(errorMessage, null, 2))
       await this.updateProjectSetupStep(projectId, ProjectSetupStep.DEPLOYMENT, ProjectSetupStatus.FAILED, errorMessage)
       throw new InternalServerErrorException(errorMessage)
     }
@@ -251,16 +236,30 @@ export default class ClientService {
    * @returns {Array<{ template: string; name: string }>} An array of objects containing template and name.
    */
   private static getGitHubRepositories(payload: CreateProjectPayload): { template: string; name: string }[] {
-    const newRepoNameFrontend: string = `flapi-${payload.customer_name.toLowerCase()}-${payload.application_name.toLowerCase()}-frontend`
-    const newRepoNameBackend: string = `flapi-${payload.customer_name.toLowerCase()}-${payload.application_name.toLowerCase()}-backend`
+    // const newRepoNameFrontend: string = `flapi-${this.sanitize(payload.customer_name)}-${this.sanitize(payload.application_name)}-frontend`
+    const newRepoNameBackend: string = `flapi-${this.sanitize(payload.customer_name)}-${this.sanitize(payload.application_name)}-backend`
 
-    const templateRepoFrontend: string = 'flapi-starterkit-frontend'
+    // const templateRepoFrontend: string = 'flapi-starterkit-frontend'
     const templateRepoBackend: string = 'flapi-starterkit-backend'
 
     return [
-      { template: templateRepoFrontend, name: newRepoNameFrontend },
+      // { template: templateRepoFrontend, name: newRepoNameFrontend },
       { template: templateRepoBackend, name: newRepoNameBackend },
     ]
+  }
+
+  /**
+   * Sanitize a string by converting it to lowercase and replacing spaces with hyphens.
+   * @param {string} s - The string to sanitize.
+   * @returns {string} The sanitized string.
+   */
+  private static readonly sanitize: (s: string) => string = (s: string): string => {
+    return s
+      .toLowerCase()
+      .normalize('NFD') // décompose les caractères accentués
+      .replace(/[\u0300-\u036f]/g, '') // supprime les accents
+      .replace(/[^a-z0-9]+/g, '-') // remplace tout caractère non alphanumérique par un tiret
+      .replace(/^-+|-+$/g, '') // supprime les tirets en début et fin
   }
 
   /**
@@ -297,15 +296,15 @@ export default class ClientService {
       case ProjectSetupStep.SETUP_STARTED:
         return 'Initialisation du projet... (quelques secondes)'
       case ProjectSetupStep.VERIFY_SUBDOMAINS:
-        return 'Vérification des sous-domaines disponibles... (5-10 sec)'
+        return 'Vérification des sous-domaines disponibles... (2 sec)'
       case ProjectSetupStep.CREATE_SUBDOMAINS:
-        return 'Création des sous-domaines AWS... (15-20 sec)'
+        return 'Création des sous-domaines AWS... (2 sec)'
       case ProjectSetupStep.CREATE_DATABASE:
-        return 'Création des bases de données O2Switch... (10-15 sec)'
+        return 'Création des bases de données O2Switch... (5-10 sec)'
       case ProjectSetupStep.CREATE_REPOSITORIES:
-        return 'Création des repositories GitHub... (15-30 sec)'
+        return 'Création des repositories GitHub... (15-25 sec)'
       case ProjectSetupStep.DEPLOYMENT:
-        return 'Déploiement de l’application... (1-2 min)'
+        return 'Déploiement de l’application... (15-20 sec)'
       case ProjectSetupStep.SETUP_DONE:
         return 'Configuration terminée'
       case ProjectSetupStep.SETUP_FAILED:

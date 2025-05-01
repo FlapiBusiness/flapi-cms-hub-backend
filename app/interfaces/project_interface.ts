@@ -41,3 +41,13 @@ export interface CreateProjectPayload {
   // category?: string
   project_setup_id?: number
 }
+
+/**
+ * CreateProjectResponse
+ * @property {string} message - The response message
+ * @property {number} project_id - The ID of the created project
+ */
+export interface CreateProjectResponse {
+  message: string
+  project_id: number
+}

@@ -126,6 +126,8 @@ export default class AWSDomainService {
       const command: ChangeResourceRecordSetsCommand = new ChangeResourceRecordSetsCommand(params)
       const response: ChangeResourceRecordSetsCommandOutput = await this.route53Client.send(command)
 
+      console.log('Subdomain created:', subdomain)
+
       // Analyse la réponse pour déterminer si l'opération a réussi
       return response.ChangeInfo?.Status === 'PENDING' || response.ChangeInfo?.Status === 'INSYNC'
     } catch (error) {

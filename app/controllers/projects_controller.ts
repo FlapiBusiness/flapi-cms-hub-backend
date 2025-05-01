@@ -16,8 +16,8 @@ export default class ProjectsController {
    * @description Create a new project
    * @requestBody <CreateProjectPayload>
    * @content application/json
-   * @responseBody 201 - <MessageResponse>
-   * @responseBody 400 - <MessageResponse>
+   * @responseBody 201 - <CreateProjectResponse>
+   * @responseBody 400 - <CreateProjectResponse>
    */
   /**
    * Handle project creation
@@ -29,10 +29,10 @@ export default class ProjectsController {
   public async create({ request, response }: HttpContext): Promise<void> {
     const payload: CreateProjectPayload = await createProjectValidator.validate(request.all())
 
-    await ProjectService.createProject(payload)
+    const createdProject: Project = await ProjectService.createProject(payload)
 
     // Respond with the created project
-    response.status(201).json({ message: 'Project created successfully' })
+    response.status(201).json({ message: 'Project created successfully', project_id: createdProject.id })
   }
 
   /**
