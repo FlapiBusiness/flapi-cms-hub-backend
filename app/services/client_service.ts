@@ -167,6 +167,9 @@ export default class ClientService {
         await delay(15000)
 
         await GitHubService.triggerWorkflowIndexingCommit(repo.name)
+
+        await delay(10000)
+        await GitHubService.triggerWorkflowIndexingCommit(repo.name)
       }
 
       await this.updateProjectSetupStep(projectId, ProjectSetupStep.CREATE_REPOSITORIES, ProjectSetupStatus.COMPLETED)
@@ -190,8 +193,8 @@ export default class ClientService {
    */
   private static async triggerGitHubWorkflows(projectId: number, payload: CreateProjectPayload): Promise<void> {
     try {
-      // Wait 30 seconds to let GitHub finalize the creation of repositories
-      await delay(30000)
+      // Wait 20 seconds to let GitHub finalize the creation of repositories
+      await delay(20000)
 
       await this.updateProjectSetupStep(projectId, ProjectSetupStep.DEPLOYMENT)
       const githubRepositories: { template: string; name: string }[] = this.getGitHubRepositories(payload)
