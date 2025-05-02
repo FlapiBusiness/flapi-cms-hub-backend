@@ -259,8 +259,9 @@ export class GitHubService {
    * @returns {Promise<void>}
    */
   public static async triggerWorkflowIndexingCommit(repo: string): Promise<void> {
-    const branchName: string = 'workflow-index'
-    const triggerFilePath: string = `.github/workflows/.trigger-indexing.md`
+    const randomNumber: number = Math.floor(Math.random() * 1000000)
+    const branchName: string = `workflow-index-${randomNumber}`
+    const triggerFilePath: string = `.github/workflows/.trigger-indexing-${randomNumber}.md`
     const content: string = Buffer.from(`# Trigger GitHub workflows indexing\n`).toString('base64')
 
     try {
