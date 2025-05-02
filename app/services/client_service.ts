@@ -236,14 +236,14 @@ export default class ClientService {
    * @returns {Array<{ template: string; name: string }>} An array of objects containing template and name.
    */
   private static getGitHubRepositories(payload: CreateProjectPayload): { template: string; name: string }[] {
-    // const newRepoNameFrontend: string = `flapi-${this.sanitize(payload.customer_name)}-${this.sanitize(payload.application_name)}-frontend`
+    const newRepoNameFrontend: string = `flapi-${this.sanitize(payload.customer_name)}-${this.sanitize(payload.application_name)}-frontend`
     const newRepoNameBackend: string = `flapi-${this.sanitize(payload.customer_name)}-${this.sanitize(payload.application_name)}-backend`
 
-    // const templateRepoFrontend: string = 'flapi-starterkit-frontend'
+    const templateRepoFrontend: string = 'flapi-starterkit-frontend'
     const templateRepoBackend: string = 'flapi-starterkit-backend'
 
     return [
-      // { template: templateRepoFrontend, name: newRepoNameFrontend },
+      { template: templateRepoFrontend, name: newRepoNameFrontend },
       { template: templateRepoBackend, name: newRepoNameBackend },
     ]
   }
