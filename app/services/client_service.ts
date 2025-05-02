@@ -164,8 +164,8 @@ export default class ClientService {
           throw new InternalServerErrorException(`Impossible de créer le repository "${repo.name}".`)
         }
 
-        // Wait 15 seconds to let GitHub finalize the creation of repositories
-        await delay(15000)
+        // Wait 40 seconds to let GitHub finalize the creation of repositories
+        await delay(40000)
 
         // await GitHubService.triggerWorkflowIndexingCommit(repo.name)
         await GitHubService.createFileInRepo({
@@ -174,6 +174,8 @@ export default class ClientService {
           content: `# Just a dummy trigger to force workflow indexing`,
           commitMessage: 'chore: trigger workflow indexing',
         })
+
+        await GitHubService.createDummyPullRequest(repo.name, 'develop')
       }
 
       await this.updateProjectSetupStep(projectId, ProjectSetupStep.CREATE_REPOSITORIES, ProjectSetupStatus.COMPLETED)
@@ -216,7 +218,7 @@ export default class ClientService {
 
       for (const repo of githubRepositories) {
         // 🧠 Retry: attendre que tous les workflows soient bien listés
-        let retries: number = 10
+        let retries: number = 15
         let workflows: GitHubWorkflow[] = []
 
         while (retries-- > 0) {
@@ -229,6 +231,8 @@ export default class ClientService {
           console.log(`[${repo.name}] Workflows trouvés: ${workflows.length}. Nouvelle tentative dans 2s...`)
           await delay(2000)
         }
+
+        console.log('NUMBER_OF_WORKFLOWS:', workflows.length)
 
         const workflowTriggered: boolean = await GitHubService.triggerWorkflow(
           repo.name,

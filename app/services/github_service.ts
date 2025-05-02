@@ -186,6 +186,37 @@ export class GitHubService {
   }
 
   /**
+   * Crée une Pull Request (PR) vide pour forcer l'indexation des workflows GitHub.
+   * @param {string} repo - Nom du repository.
+   * @param {string} branch - Nom de la branche cible.
+   * @returns {Promise<void>}
+   */
+  public static async createDummyPullRequest(repo: string, branch: string): Promise<void> {
+    const url: string = `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/pulls`
+    const title: string = 'chore: dummy PR to trigger workflow indexing'
+    const body: string = 'Cette PR est utilisée pour forcer l’indexation des workflows GitHub.'
+
+    try {
+      await axios.post(
+        url,
+        {
+          title,
+          head: branch,
+          base: branch,
+          body,
+        },
+        {
+          headers: this.AUTH_HEADER,
+        },
+      )
+
+      logger.info(`Dummy PR créée dans ${repo} (${branch} → ${branch})`)
+    } catch (error: any) {
+      logger.warn(`Échec création PR dans ${repo}: ${error.response?.data?.message || error.message}`)
+    }
+  }
+
+  /**
    * Déclenche un workflow GitHub Actions.
    * @param {string} repo - Nom du repository.
    * @param {string} workflowPath - Nom du fichier YAML du workflow.
