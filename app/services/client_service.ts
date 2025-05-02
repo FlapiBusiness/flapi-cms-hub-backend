@@ -190,8 +190,8 @@ export default class ClientService {
    */
   private static async triggerGitHubWorkflows(projectId: number, payload: CreateProjectPayload): Promise<void> {
     try {
-      // Wait 15 seconds to let GitHub finalize the creation of repositories
-      await delay(15000)
+      // Wait 30 seconds to let GitHub finalize the creation of repositories
+      await delay(30000)
 
       await this.updateProjectSetupStep(projectId, ProjectSetupStep.DEPLOYMENT)
       const githubRepositories: { template: string; name: string }[] = this.getGitHubRepositories(payload)
@@ -221,6 +221,8 @@ export default class ClientService {
           )
         }
       }
+      // Wait 4 minutes to let GitHub finalize the deployment
+      await delay(240000)
       await this.updateProjectSetupStep(projectId, ProjectSetupStep.DEPLOYMENT, ProjectSetupStatus.COMPLETED)
     } catch (error: any) {
       const errorMessage: string = error.message || 'Erreur lors du déclenchement des workflows'
@@ -304,7 +306,7 @@ export default class ClientService {
       case ProjectSetupStep.CREATE_REPOSITORIES:
         return 'Création des repositories GitHub... (15-25 sec)'
       case ProjectSetupStep.DEPLOYMENT:
-        return 'Déploiement de l’application... (15-20 sec)'
+        return 'Déploiement de l’application... (4-6 min)'
       case ProjectSetupStep.SETUP_DONE:
         return 'Configuration terminée'
       case ProjectSetupStep.SETUP_FAILED:
