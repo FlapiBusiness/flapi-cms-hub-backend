@@ -199,21 +199,23 @@ export class GitHubService {
     ref: string,
     inputs: Record<string, string | number>,
   ): Promise<boolean> {
-    const workflow: GitHubWorkflow[] = await this.listWorkflows(repo)
-    const workflowId: number | undefined = workflow.find((w: GitHubWorkflow): boolean => w.path === workflowPath)?.id
-
+    // const workflow: GitHubWorkflow[] = await this.listWorkflows(repo)
+    // const workflowId: number | undefined = workflow.find((w: GitHubWorkflow): boolean => w.path === workflowPath)?.id
+    //
     console.log({
       inputs,
     })
-
-    if (!workflowId) {
-      const errorMessage: string = `Workflow "${workflowPath}" non trouvé dans le repository "${repo}".`
-      logger.error(errorMessage)
-      throw new Error(errorMessage)
-    }
+    //
+    // if (!workflowId) {
+    //   const errorMessage: string = `Workflow "${workflowPath}" non trouvé dans le repository "${repo}".`
+    //   logger.error(errorMessage)
+    //   throw new Error(errorMessage)
+    // }
 
     // Encoder le nom du fichier pour l'URL
-    const url: string = `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/actions/workflows/${workflowId}/dispatches`
+    const encodedWorkflowPath: string = encodeURIComponent(workflowPath) // très important
+    const url: string = `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/actions/workflows/${encodedWorkflowPath}/dispatches`
+    // const url: string = `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/actions/workflows/${workflowId}/dispatches`
 
     try {
       const response: AxiosResponse<any, any> = await axios.post(

@@ -3,6 +3,7 @@ import env from '#start/env'
 import BadRequestException from '#exceptions/bad_request_exception'
 import O2SwitchService from '#services/o2switch_service'
 import { delay, GitHubService } from '#services/github_service'
+import type { GitHubWorkflow } from '#services/github_service'
 import InternalServerErrorException from '#exceptions/internal_server_error_exception'
 import { ProjectSetupStep } from '#enums/project_setup_step'
 import ProjectSetupService from '#services/project_setup_service'
@@ -126,7 +127,7 @@ export default class ClientService {
       await this.updateProjectSetupStep(projectId, ProjectSetupStep.CREATE_DATABASE)
       const databaseEnvironments: string[] = ['development-remote', 'staging', 'production']
       for (const dbEnv of databaseEnvironments) {
-        const dbName: string = `${payload.customer_name}-${payload.application_name}_${dbEnv}`
+        const dbName: string = `${this.sanitize(payload.customer_name)}-${this.sanitize(payload.application_name)}_${dbEnv}`
         await O2SwitchService.createDatabase(dbName)
       }
       await this.updateProjectSetupStep(projectId, ProjectSetupStep.CREATE_DATABASE, ProjectSetupStatus.COMPLETED)
@@ -151,7 +152,7 @@ export default class ClientService {
   private static async createGitHubRepositories(projectId: number, payload: CreateProjectPayload): Promise<void> {
     try {
       await this.updateProjectSetupStep(projectId, ProjectSetupStep.CREATE_REPOSITORIES)
-      const newDescriptionRepo: string = `Application ${payload.application_name} for ${payload.customer_name}`
+      const newDescriptionRepo: string = `Application ${this.sanitize(payload.application_name)} for ${this.sanitize(payload.customer_name)}`
       const newPrivateRepo: boolean = false
 
       for (const repo of this.getGitHubRepositories(payload)) {
@@ -166,10 +167,13 @@ export default class ClientService {
         // Wait 15 seconds to let GitHub finalize the creation of repositories
         await delay(15000)
 
-        await GitHubService.triggerWorkflowIndexingCommit(repo.name)
-
-        await delay(10000)
-        await GitHubService.triggerWorkflowIndexingCommit(repo.name)
+        // await GitHubService.triggerWorkflowIndexingCommit(repo.name)
+        await GitHubService.createFileInRepo({
+          repo: repo.name,
+          path: `.github/workflows/.trigger-${Date.now()}.md`,
+          content: `# Just a dummy trigger to force workflow indexing`,
+          commitMessage: 'chore: trigger workflow indexing',
+        })
       }
 
       await this.updateProjectSetupStep(projectId, ProjectSetupStep.CREATE_REPOSITORIES, ProjectSetupStatus.COMPLETED)
@@ -211,6 +215,21 @@ export default class ClientService {
       }
 
       for (const repo of githubRepositories) {
+        // 🧠 Retry: attendre que tous les workflows soient bien listés
+        let retries: number = 10
+        let workflows: GitHubWorkflow[] = []
+
+        while (retries-- > 0) {
+          workflows = await GitHubService.listWorkflows(repo.name)
+          // verify if found init-update-files-and-push.yaml
+          const workflowFound: boolean = workflows.some((workflow: GitHubWorkflow): boolean => {
+            return workflow.path === workflowPath
+          })
+          if (workflowFound) break
+          console.log(`[${repo.name}] Workflows trouvés: ${workflows.length}. Nouvelle tentative dans 2s...`)
+          await delay(2000)
+        }
+
         const workflowTriggered: boolean = await GitHubService.triggerWorkflow(
           repo.name,
           workflowPath,
