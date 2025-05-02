@@ -44,8 +44,8 @@ export default class ClientService {
     console.log({
       TRIGGER_GITHUB_WORKFLOWS_DURATION: (triggerGitHubWorkflowsDuration / 1000).toFixed(2),
     })
-    // // Step 6: Update the project setup step to complete
-    // await this.updateProjectSetupStep(projectId, ProjectSetupStep.SETUP_DONE, ProjectSetupStatus.COMPLETED)
+    // Step 6: Update the project setup step to complete
+    await this.updateProjectSetupStep(projectId, ProjectSetupStep.SETUP_DONE, ProjectSetupStatus.COMPLETED)
   }
 
   /**
