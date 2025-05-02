@@ -304,7 +304,7 @@ export default class ClientService {
       case ProjectSetupStep.CREATE_DATABASE:
         return 'Création des bases de données O2Switch... (5-10 sec)'
       case ProjectSetupStep.CREATE_REPOSITORIES:
-        return 'Création des repositories GitHub... (15-25 sec)'
+        return 'Création des repositories GitHub... (40-55 sec)'
       case ProjectSetupStep.DEPLOYMENT:
         return 'Déploiement de l’application... (4-6 min)'
       case ProjectSetupStep.SETUP_DONE:
