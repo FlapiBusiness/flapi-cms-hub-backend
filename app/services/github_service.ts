@@ -191,28 +191,56 @@ export class GitHubService {
    * @param {string} branch - Nom de la branche cible.
    * @returns {Promise<void>}
    */
-  public static async createDummyPullRequest(repo: string, branch: string): Promise<void> {
-    const url: string = `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/pulls`
-    const title: string = 'chore: dummy PR to trigger workflow indexing'
-    const body: string = 'Cette PR est utilisée pour forcer l’indexation des workflows GitHub.'
+  public static async createDummyPullRequest(repo: string): Promise<void> {
+    const baseBranch: string = 'develop'
+    const tmpBranch: string = `workflow-index-${Date.now()}`
+    const triggerFilePath: string = `.github/workflows/.trigger-${Date.now()}.md`
+    const triggerContent: string = Buffer.from(`# Dummy PR to force indexing`).toString('base64')
 
     try {
+      // 1. Récupère le SHA de la branche de base
+      const refRes: AxiosResponse<any, any> = await axios.get(
+        `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/git/ref/heads/${baseBranch}`,
+        { headers: this.AUTH_HEADER },
+      )
+      const baseSha: AxiosResponse<any, any> = refRes.data.object.sha
+
+      // 2. Crée la branche temporaire
       await axios.post(
-        url,
+        `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/git/refs`,
         {
-          title,
-          head: branch,
-          base: branch,
-          body,
+          ref: `refs/heads/${tmpBranch}`,
+          sha: baseSha,
         },
-        {
-          headers: this.AUTH_HEADER,
-        },
+        { headers: this.AUTH_HEADER },
       )
 
-      logger.info(`Dummy PR créée dans ${repo} (${branch} → ${branch})`)
+      // 3. Ajoute un fichier dans la branche temporaire
+      await axios.put(
+        `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/contents/${triggerFilePath}`,
+        {
+          message: 'chore: trigger workflow indexing via PR',
+          content: triggerContent,
+          branch: tmpBranch,
+        },
+        { headers: this.AUTH_HEADER },
+      )
+
+      // 4. Crée la PR vers `develop`
+      await axios.post(
+        `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/pulls`,
+        {
+          title: 'chore: dummy PR to trigger GitHub Actions indexing',
+          head: tmpBranch,
+          base: baseBranch,
+          body: 'Cette PR existe uniquement pour forcer l’indexation des fichiers .yaml comme workflows.',
+        },
+        { headers: this.AUTH_HEADER },
+      )
+
+      logger.info(`Dummy PR créée de ${tmpBranch} → ${baseBranch} dans ${repo}`)
     } catch (error: any) {
-      logger.warn(`Échec création PR dans ${repo}: ${error.response?.data?.message || error.message}`)
+      logger.warn(`Échec création dummy PR dans ${repo}: ${error.response?.data?.message || error.message}`)
     }
   }
 

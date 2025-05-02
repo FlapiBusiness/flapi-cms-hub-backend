@@ -175,7 +175,7 @@ export default class ClientService {
           commitMessage: 'chore: trigger workflow indexing',
         })
 
-        await GitHubService.createDummyPullRequest(repo.name, 'develop')
+        await GitHubService.createDummyPullRequest(repo.name)
       }
 
       await this.updateProjectSetupStep(projectId, ProjectSetupStep.CREATE_REPOSITORIES, ProjectSetupStatus.COMPLETED)
