@@ -1,6 +1,12 @@
 import AWSDomainService from '#services/aws_domain_service'
 import type { HttpContext } from '@adonisjs/core/http'
 import logger from '@adonisjs/core/services/logger'
+import { checkDomainAvailabilityValidator } from '#validators/check_domain_availability_validator'
+import { checkSubDomainAvailabilityValidator } from '#validators/check_sub_domain_availability_validator'
+import type {
+  CheckDomainAvailabilityPayload,
+  CheckSubDomainAvailabilityPayload,
+} from '#interfaces/aws_domain_interface'
 
 /**
  * Contrôleur pour gérer les opérations liées aux domaines AWS via Route 53.
@@ -8,40 +14,59 @@ import logger from '@adonisjs/core/services/logger'
  */
 export default class AWSDomainController {
   /**
+   * @checkDomainAvailability
+   * @operationId checkDomainAvailability
+   * @tag AWS Domain
+   * @summary Vérifie la disponibilité d'un domaine
+   * @description Vérifie si un domaine est disponible via AWS Route 53 Domains
+   * @requestBody <CheckDomainAvailabilityPayload>
+   * @required domain
+   * @content application/json
+   * @responseBody 200 - <AwsDomainResponse>
+   * @responseBody 500 - <ResultMessageResponse>
+   */
+  /**
    * Vérifie si un domaine est disponible via AWS Route 53 Domains.
    * @param {HttpContext} ctx - Le contexte HTTP.
    * @returns {Promise<void>} - La réponse avec la disponibilité du domaine.
    */
   public async checkDomainAvailability({ request, response }: HttpContext): Promise<void> {
-    // TODO: Add validator
-    const domain: string = request.input('domain')
+    const payload: CheckDomainAvailabilityPayload = await checkDomainAvailabilityValidator.validate(request.all())
 
     try {
-      const isAvailable: boolean = await AWSDomainService.checkDomainAvailability(domain)
-      return response.status(200).json({ domain, isAvailable })
+      const domainExist: boolean = await AWSDomainService.checkDomainAvailability(payload.domain)
+      response.status(200).json({ domainExist })
     } catch (error) {
       logger.error('Erreur lors de la vérification du domaine:', error)
-      return response.status(500).json({ message: 'Erreur lors de la vérification de la disponibilité du domaine.' })
+      response.status(500).json({ message: 'Erreur lors de la vérification de la disponibilité du domaine.' })
     }
   }
 
+  /**
+   * @checkSubDomainAvailability
+   * @operationId checkSubDomainAvailability
+   * @tag AWS Domain
+   * @summary Vérifie la disponibilité d'un sous-domaine
+   * @description Vérifie si un sous-domaine est disponible via AWS Route 53 Domains
+   * @requestBody <CheckSubDomainAvailabilityPayload>
+   * @content application/json
+   * @responseBody 200 - <AwsDomainResponse>
+   * @responseBody 500 - <ResultMessageResponse>
+   */
   /**
    * Vérifie si un sous domaine est disponible via AWS Route 53 Domains.
    * @param {HttpContext} ctx - Le contexte HTTP.
    * @returns {Promise<void>} - La réponse avec la disponibilité du domaine.
    */
   public async checkSubDomainAvailability({ request, response }: HttpContext): Promise<void> {
-    // TODO: Ajouter le validator
-    const hostedZoneId: string = request.input('hostedZoneId')
-    const subdomain: string = request.input('subdomain')
-    const domain: string = request.input('domain')
+    const payload: CheckSubDomainAvailabilityPayload = await checkSubDomainAvailabilityValidator.validate(request.all())
 
     try {
-      const isAvailable: boolean = await AWSDomainService.checkSubdomainAvailability(hostedZoneId, subdomain, domain)
-      return response.status(200).json({ subdomain, isAvailable })
+      const subdomainExist: boolean = await AWSDomainService.checkSubdomainAvailability(payload.subdomain)
+      response.status(200).json({ subdomainExist })
     } catch (error) {
       logger.error('Erreur lors de la vérification du domaine:', error)
-      return response.status(500).json({ message: 'Erreur lors de la vérification de la disponibilité du domaine.' })
+      response.status(500).json({ message: 'Erreur lors de la vérification de la disponibilité du domaine.' })
     }
   }
 }

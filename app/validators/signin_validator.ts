@@ -1,7 +1,7 @@
 import vine from '@vinejs/vine'
 
 /**
- *  Type manuel basé sur le schéma pour typé le validateur.
+ *  Manual type based on the diagram for typical the validator.
  */
 export type SignInPayload = {
   email: string

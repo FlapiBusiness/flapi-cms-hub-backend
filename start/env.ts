@@ -9,6 +9,7 @@
 |
 */
 
+import '@foadonis/crypt'
 import { Env } from '@adonisjs/core/env'
 
 export default await Env.create(new URL('../', import.meta.url), {
@@ -21,7 +22,7 @@ export default await Env.create(new URL('../', import.meta.url), {
   DB_HOST: Env.schema.string({ format: 'host' }),
   DB_PORT: Env.schema.number(),
   DB_USER: Env.schema.string(),
-  DB_PASSWORD: Env.schema.string.optional(),
+  DB_PASSWORD: Env.schema.string(),
   DB_DATABASE_NAME: Env.schema.string(),
   DB_DEBUG: Env.schema.boolean(),
   HEALTH: Env.schema.string(),
@@ -52,4 +53,8 @@ export default await Env.create(new URL('../', import.meta.url), {
   FRONTEND_APP_REDIRECT_URI_ACCOUNT_VALIDATE: Env.schema.string(),
   FRONTEND_APP_REDIRECT_URI_FORGOT_PASSWORD: Env.schema.string(),
   FRONTEND_APP_REDIRECT_URI_SEND_MAIL_TO_MODIFY_EMAIL: Env.schema.string(),
+  KEYCLOAK_URL: Env.schema.string(),
+  KEYCLOAK_REALM: Env.schema.string(),
+  KEYCLOAK_CLIENT_ID: Env.schema.string(),
+  KEYCLOAK_CLIENT_SECRET: Env.schema.string(),
 })

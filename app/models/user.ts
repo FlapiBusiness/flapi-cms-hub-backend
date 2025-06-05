@@ -1,117 +1,124 @@
-import hash from '@adonisjs/core/services/hash'
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import { BaseModel, belongsTo, column, manyToMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, ManyToMany } from '@adonisjs/lucid/types/relations'
 import UserRole from '#models/user_role'
+import Project from '#models/project'
+import Team from '#models/team'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import env from '#start/env'
-import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
-import { Hash } from '@adonisjs/hash'
-import { compose } from '@adonisjs/core/helpers'
-
-/**
- * Fonction de mixin pour la gestion de l'authentification.
- * Doc : https://docs.adonisjs.com/guides/authentication/verifying-user-credentials
- */
-const AuthFinder: ReturnType<typeof withAuthFinder> = withAuthFinder((): Hash => hash.use(), {
-  uids: ['email'],
-  passwordColumnName: 'password',
-})
 
 /**
  * The User model represents a user of the application.
  */
-export default class User extends compose(BaseModel, AuthFinder) {
+export default class User extends BaseModel {
   /**
    * The unique identifier for the user.
    */
   @column({ isPrimary: true })
+  // @required @example(1)
   declare public id: number
+
+  /**
+   * The Keycloak user ID associated with the user.
+   */
+  @column()
+  // @required @example('12345678-1234-1234-1234-123456789012')
+  declare public keycloak_user_id: string
 
   /**
    * The role ID associated with the user.
    */
   @column()
-  declare public roleId: number
+  // @required @example(1)
+  declare public role_id: number
 
   /**
    * The relationship to the Role model.
    */
-  @belongsTo((): typeof UserRole => UserRole)
+  @belongsTo(() => UserRole, {
+    foreignKey: 'role_id',
+  })
+  // @required
   declare public role: BelongsTo<typeof UserRole>
 
   /**
    * The last name of the user.
    */
   @column()
+  // @required @example('Doe')
   declare public lastname: string
 
   /**
    * The first name of the user.
    */
   @column()
+  // @required @example('John')
   declare public firstname: string
 
   /**
    * The email address of the user. Must be unique.
    */
   @column()
+  // @required @example('john-doe@flapi.org')
   declare public email: string
-
-  /**
-   * The hashed password of the user.
-   * This field is hidden in serialized responses.
-   */
-  @column({ serializeAs: null })
-  declare public password: string
 
   /**
    * The currency code (e.g., USD, EUR) associated with the user.
    */
   @column()
-  declare public currencyCode: string | null
+  // @example('USD')
+  declare public currency_code: string | null
 
   /**
    * The user's IP address.
    */
   @column()
-  declare public ipAddress: string | null
+  // @example('0.0.0.0')
+  declare public ip_address: string | null
 
   /**
    * The region of the IP address associated with the user.
    */
   @column()
-  declare public ipRegion: string | null
-
-  /**
-   * Whether the user account is active.
-   */
-  @column()
-  declare public isActive: boolean
-
-  /**
-   * The 6-digit active code for the user.
-   */
-  @column()
-  declare public activeCode: number
+  // @example('FR')
+  declare public ip_region: string | null
 
   /**
    * The Stripe customer ID associated with the user.
    */
   @column()
-  declare public stripeCustomerId: number | null
+  // @example(12345678)
+  declare public stripe_customer_id: number | null
+
+  @manyToMany(() => Team, {
+    pivotTable: 'user_teams',
+    pivotColumns: ['role'],
+  })
+  declare public teams: ManyToMany<typeof Team>
+
+  /**
+   * Relation many-to-many avec les projets via la table pivot 'user_project_permissions'
+   * On récupère ici le champ 'has_access' pour savoir si l'utilisateur a accès au projet.
+   */
+  @manyToMany(() => Project, {
+    pivotTable: 'user_project_permissions',
+    pivotColumns: ['has_access'],
+  })
+  declare public project_permissions: ManyToMany<typeof Project>
 
   /**
    * The timestamp when the user was created.
    */
   @column.dateTime({ autoCreate: true })
-  declare public createdAt: DateTime
+  // @required @example('2022-01-01T12:00:00.000Z')
+  declare public created_at: DateTime
 
   /**
    * The timestamp when the user was last updated.
    */
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare public updatedAt: DateTime | null
+  // @example('2022-01-01T12:00:00.000Z')
+  declare public updated_at: DateTime | null
 
   /**
    * The access token provider for the user model.
@@ -124,4 +131,12 @@ export default class User extends compose(BaseModel, AuthFinder) {
     type: 'auth_token',
     tokenSecretLength: env.get('API_USER_TOKEN_SECRET_LENGTH'),
   })
+
+  /**
+   * The full name of the user, combining the first and last name.
+   */
+  // @no-swagger
+  public get fullName(): string {
+    return this.firstname + ' ' + this.lastname
+  }
 }

@@ -6,8 +6,12 @@ import router from '@adonisjs/core/services/router'
 import './routes/aws.js'
 import './routes/swagger.js'
 import './routes/health.js'
-import './routes/client.js'
 import './routes/auth.js'
+import './routes/project.js'
+import './routes/database.js'
+import './routes/user.js'
+import './routes/team.js'
+import './routes/application_event_log.js'
 
 /**
  * Cette route est utilisée pour tester le fonctionnement de base de l'application,

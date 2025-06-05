@@ -6,7 +6,7 @@ import { UserFactory } from '#database/factories/user_factory'
  * @class UserSeeder
  */
 export default class extends BaseSeeder {
-  public static environment: string[] = ['development', 'development-remote', 'test']
+  public static environment: string[] = ['development', 'test']
 
   /**
    * Run the seeder

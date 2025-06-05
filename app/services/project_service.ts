@@ -1,0 +1,187 @@
+import type { CreateProjectPayload, UpdateProjectPayload } from '#interfaces/project_interface'
+import logger from '@adonisjs/core/services/logger'
+import MailService from '#services/mail_service'
+import env from '#start/env'
+import Project from '#models/project'
+import User from '#models/user'
+import Database from '#models/database'
+import Team from '#models/team'
+import type ProjectSetup from '#models/project_setup'
+import ProjectSetupEvent from '#events/project_setup_event'
+import ClientService from '#services/client_service'
+/**
+ * Service to handle project operations
+ * @class ProjectService
+ */
+export default class ProjectService {
+  /**
+   * Create a new project
+   * @param {CreateProjectPayload} payload - Data to create the project
+   * @returns {Promise<void>} - A promise that resolves with no return value
+   */
+  public static async createProject(payload: CreateProjectPayload): Promise<Project> {
+    try {
+      // Create the project
+      const project: Project = await Project.create({
+        application_name: payload.application_name,
+        user_id: payload.customer_user_id,
+        project_setup_id: payload.project_setup_id,
+        domain_name: payload.domain_name,
+      })
+      // const user: User = await User.findByOrFail('id', payload.customer_user_id)
+
+      // await MailService.sendEmail(user.email, 'project-created', 'Project Created', {
+      //   username: user.firstname + ' ' + user.lastname,
+      //   appName: payload.application_name,
+      //   domainName: payload.domain_name,
+      //   redirect_uri:
+      //     env.get('FRONTEND_APP_BASE_URL') + env.get('FRONTEND_APP_REDIRECT_URI_ACCOUNT_VALIDATE') + user.email,
+      // })
+
+      ClientService.createNewApplication(project.id, payload)
+
+      return project
+    } catch (error: any) {
+      logger.error(error)
+      throw error
+    }
+  }
+
+  /**
+   * Get all projects
+   * @returns {Promise<Project[]>} - A promise that resolves with an array of projects
+   */
+  public static async getProjects(): Promise<Project[]> {
+    try {
+      return await Project.query().preload('teams').preload('project_setup')
+    } catch (error: any) {
+      logger.error(error)
+      throw error
+    }
+  }
+
+  /**
+   * Get a project by ID
+   * @param {number} id - The project ID
+   * @returns {Promise<Project>} - A promise that resolves with a project or null
+   */
+  public static async getProjectById(id: number): Promise<Project> {
+    try {
+      return await Project.query().where('id', id).preload('teams').preload('project_setup').firstOrFail()
+    } catch (error: any) {
+      logger.error(error)
+      throw error
+    }
+  }
+
+  /**
+   * Get a project by user ID
+   * @param {number} userId - The user ID
+   * @returns {Promise<Project>} - A promise that resolves with a project or null
+   */
+  public static async getProjectByUserId(userId: number): Promise<Project[]> {
+    try {
+      return await Project.query().where('user_id', userId).preload('teams').preload('project_setup')
+    } catch (error: any) {
+      logger.error(error)
+      throw error
+    }
+  }
+
+  /**
+   * Update a project
+   * @param {number} projectId - The project ID
+   * @param {UpdateProjectPayload} payload - The data to update the project
+   */
+  public static async updateProject(projectId: number, payload: UpdateProjectPayload): Promise<void> {
+    try {
+      const project: Project = await ProjectService.getProjectById(projectId)
+
+      await project
+        .merge({
+          application_name: payload.application_name,
+          user_id: payload.customer_user_id,
+          domain_name: payload.domain_name,
+          project_setup_id: payload.project_setup_id,
+        })
+        .save()
+      await project.refresh()
+
+      const user: User = await User.findByOrFail('id', project.user_id)
+
+      const db: Database | null = await Database.find(project.database_id)
+      await MailService.sendEmail(user.email, 'project-updated', 'Project Updated', {
+        username: user.firstname + ' ' + user.lastname,
+        appName: payload.application_name,
+        domainName: payload.domain_name,
+        databaseName: db ? db.name : '',
+        redirect_uri:
+          env.get('FRONTEND_APP_BASE_URL') + env.get('FRONTEND_APP_REDIRECT_URI_ACCOUNT_VALIDATE') + user.email,
+      })
+    } catch (error: any) {
+      logger.error(error)
+      throw error
+    }
+  }
+
+  /**
+   * Delete a project
+   * @param {number} projectId - The project ID
+   */
+  public static async deleteProject(projectId: number): Promise<void> {
+    try {
+      const project: Project = await ProjectService.getProjectById(projectId)
+      await project.delete()
+    } catch (error: any) {
+      logger.error(error)
+      throw error
+    }
+  }
+
+  /**
+   * Ajoute une équipe à un projet.
+   * @param {number} projectId - L'ID du projet
+   * @param {number} teamId - L'ID de l'équipe à ajouter
+   * @returns {Promise<Project>} Le projet mis à jour
+   */
+  public static async addTeamToProject(projectId: number, teamId: number): Promise<Project> {
+    const project: Project = await Project.findOrFail(projectId)
+    await Team.findOrFail(teamId)
+    await project.related('teams').attach([teamId])
+    return project
+  }
+
+  /**
+   * Retire une équipe d'un projet.
+   * @param {number} projectId - L'ID du projet
+   * @param {number} teamId - L'ID de l'équipe à retirer
+   * @returns {Promise<Project>} Le projet mis à jour
+   */
+  public static async removeTeamFromProject(projectId: number, teamId: number): Promise<Project> {
+    const project: Project = await Project.findOrFail(projectId)
+    await project.related('teams').detach([teamId])
+    return project
+  }
+
+  /**
+   * Update Project Setup
+   * @param {ProjectSetup} projectSetup - The project setup to update
+   * @returns {Promise<void>} - A promise that resolves with no return value
+   */
+  public static async updateProjectSetup(projectSetup: ProjectSetup): Promise<void> {
+    try {
+      // Update the project project_setup_id
+      const project: Project | null = await Project.find(projectSetup.project_id)
+      if (!project) {
+        throw new Error('Project not found')
+      }
+      await project.merge({ project_setup_id: projectSetup.id }).save()
+      await project.refresh()
+      // Dispatch the event
+      await ProjectSetupEvent.dispatch(projectSetup)
+    } catch (err: any) {
+      logger.error(err)
+      throw err
+    }
+  }
+}

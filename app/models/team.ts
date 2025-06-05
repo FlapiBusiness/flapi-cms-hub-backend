@@ -1,0 +1,55 @@
+// app/Models/Team.ts
+import { BaseModel, belongsTo, column, manyToMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, ManyToMany } from '@adonisjs/lucid/types/relations'
+import { DateTime } from 'luxon'
+import User from '#models/user'
+import Project from '#models/project'
+
+/**
+ * The Team model represents a team in the application.
+ */
+export default class Team extends BaseModel {
+  @column({ isPrimary: true })
+  // @required @example(1)
+  declare public id: number
+
+  @column()
+  // @required @example('Team Name')
+  declare public name: string
+
+  @column()
+  // @example('Description of the team')
+  declare public description: string | undefined
+
+  @column()
+  // @required @example(1)
+  declare public owner_id: number
+
+  @belongsTo(() => User, { foreignKey: 'owner_id' })
+  declare public owner: BelongsTo<typeof User>
+
+  @column.dateTime({ autoCreate: true })
+  // @required @example('2021-01-01T00:00:00.000Z')
+  declare public created_at: DateTime
+
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  // @required @example('2021-01-01T00:00:00.000Z')
+  declare public updated_at: DateTime
+
+  /**
+   * Relation many-to-many avec les utilisateurs via la table pivot 'user_team'
+   */
+  @manyToMany(() => User, {
+    pivotTable: 'user_teams',
+    pivotColumns: ['role'],
+  })
+  declare public users: ManyToMany<typeof User>
+
+  /**
+   * Relation many-to-many avec les projets via la table pivot 'team_project'
+   */
+  @manyToMany(() => Project, {
+    pivotTable: 'team_projects',
+  })
+  declare public projects: ManyToMany<typeof Project>
+}

@@ -137,27 +137,10 @@ const mainConfig = {
         contexts: ['TSTypeAliasDeclaration', 'TSInterfaceDeclaration'],
       },
     ],
-
-    // Autorise les tags spécifiques pour le package adonis-autoswagger
-    'jsdoc/check-tag-names': [
-      'warn',
-      {
-        definedTags: [
-          'tag',
-          'summary',
-          'description',
-          'operationId',
-          'responseBody',
-          'responseHeader',
-          'paramType',
-          'requestBody',
-          'requestFormDataBody',
-          'paramPath',
-          'paramQuery',
-          'paramHeader',
-        ],
-      },
-    ],
+    /**
+     * Disables the rule for custom JSDoc tags used by adonis-autoswagger
+     */
+    'jsdoc/check-tag-names': 'off',
   },
   settings: {
     'import/resolver': {
@@ -186,4 +169,4 @@ const mainConfig = {
  * Exportation combinée des configurations
  * eslint.config.{js,mjs,cjs} nouvelle syntaxe depuis la version >= 8.57
  */
-export default [mainConfig, eslintPluginJSDoc.configs['flat/recommended'], eslintConfigPrettier]
+export default [mainConfig, eslintConfigPrettier]
