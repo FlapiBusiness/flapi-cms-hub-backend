@@ -1,5 +1,6 @@
 import Team from '#models/team'
 import User from '#models/user'
+import type { ManyToManyQueryBuilderContract } from '@adonisjs/lucid/types/relations'
 
 /**
  * Service class for managing teams
@@ -19,7 +20,13 @@ export default class TeamService {
    * @returns {Promise<Team>} - A promise that resolves with the team
    */
   public static async getTeamById(teamId: number): Promise<Team> {
-    return await Team.query().where('id', teamId).preload('users').preload('projects').firstOrFail()
+    return await Team.query()
+      .where('id', teamId)
+      .preload('users', (query: ManyToManyQueryBuilderContract<typeof User, any>) => {
+        query.preload('role')
+      })
+      .preload('projects')
+      .firstOrFail()
   }
 
   /**
@@ -74,6 +81,7 @@ export default class TeamService {
    */
   public static async deleteTeam(teamId: number, owner_id: number): Promise<void> {
     const team: Team = await Team.findOrFail(teamId)
+    console.log(`Team owner ID: ${team.owner_id}, Provided owner ID: ${owner_id}`)
     if (team.owner_id !== owner_id) {
       throw new Error('You are not authorized to delete this team')
     }
@@ -84,12 +92,21 @@ export default class TeamService {
    * Add a user to a team
    * @param {number} teamId - The ID of the team
    * @param {number} userId - The ID of the user
+   * @param {number} currentUserId - The ID of the current user (to check permissions)
    * @param {string} role - The role of the user in the team
    * @returns {Promise<Team>} - A promise that resolves with the updated team
    */
-  public static async addUserToTeam(teamId: number, userId: number, role: string = 'member'): Promise<Team> {
+  public static async addUserToTeam(
+    teamId: number,
+    userId: number,
+    currentUserId: number,
+    role: string = 'member',
+  ): Promise<Team> {
     const team: Team = await Team.findOrFail(teamId)
     await User.findOrFail(userId)
+    if (team.owner_id !== currentUserId) {
+      throw new Error('You are not authorized to add users to this team')
+    }
     await team.related('users').attach({ [userId]: { role } })
     return team
   }
@@ -98,10 +115,14 @@ export default class TeamService {
    * Remove a user from a team
    * @param {number} teamId - The ID of the team
    * @param {number} userId - The ID of the user
+   * @param {number} currentUserId - The ID of the current user (to check permissions)
    * @returns {Promise<Team>} - A promise that resolves with the updated team
    */
-  public static async removeUserFromTeam(teamId: number, userId: number): Promise<Team> {
+  public static async removeUserFromTeam(teamId: number, userId: number, currentUserId: number): Promise<Team> {
     const team: Team = await Team.findOrFail(teamId)
+    if (team.owner_id !== currentUserId) {
+      throw new Error('You are not authorized to remove users from this team')
+    }
     await team.related('users').detach([userId])
     return team
   }
@@ -110,11 +131,20 @@ export default class TeamService {
    * Update the role of a user in a team.
    * @param {number} teamId - The ID of the team
    * @param {number} userId - The ID of the user
+   * @param currentUserId - The ID of the current user (to check permissions)
    * @param {string} newRole - The new role of the user in the team
    * @returns {Promise<Team>} - A promise that resolves with the updated team
    */
-  public static async updateUserRole(teamId: number, userId: number, newRole: string): Promise<Team> {
+  public static async updateUserRole(
+    teamId: number,
+    userId: number,
+    currentUserId: number,
+    newRole: string,
+  ): Promise<Team> {
     const team: Team = await Team.findOrFail(teamId)
+    if (team.owner_id !== currentUserId) {
+      throw new Error('You are not authorized to update user roles in this team')
+    }
     await team.related('users').sync({ [userId]: { role: newRole } }, false)
     return team
   }

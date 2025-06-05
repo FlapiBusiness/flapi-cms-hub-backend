@@ -389,6 +389,25 @@ export class GitHubService {
       throw error
     }
   }
+
+  /**
+   * Liste brute des fichiers présents dans .github/workflows pour un repo donné.
+   * Cela permet de détecter les workflows "non encore indexés".
+   */
+  public static async listWorkflowFiles(repo: string): Promise<string[]> {
+    const url: string = `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/contents/.github/workflows?ref=develop`
+
+    try {
+      const response: AxiosResponse<any, any> = await axios.get(url, { headers: this.AUTH_HEADER })
+      const files: any = response.data as { name: string }[]
+      return files.map((f: any) => f.name)
+    } catch (error: any) {
+      logger.warn(
+        `Impossible de lister les fichiers YAML dans ${repo}: ${error.response?.data?.message || error.message}`,
+      )
+      return []
+    }
+  }
 }
 
 /**

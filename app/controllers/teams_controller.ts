@@ -93,12 +93,12 @@ export default class TeamsController {
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
    * @param {HttpContext['request']} ctx.request - The HTTP request object
    * @param {HttpContext['response']} ctx.response - The HTTP response object
-   * @param {HttpContext['auth']} ctx.auth - The HTTP auth object
+   * @param {HttpContext['userAuthenticated']} ctx.userAuthenticated - The authenticated user object
    * @returns {Promise<void>} - A promise that resolves with no return value
    */
-  public async create({ request, response, auth }: HttpContext): Promise<void> {
+  public async create({ request, response, userAuthenticated }: HttpContext): Promise<void> {
     const data: CreateTeamPayload = request.only(['name', 'description'])
-    const owner_id: number = auth.user!.id
+    const owner_id: number = userAuthenticated!.id
     const team: Team = await TeamService.createTeam({ ...data, owner_id })
     return response.created(team)
   }
@@ -143,11 +143,12 @@ export default class TeamsController {
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
    * @param {HttpContext['params']} ctx.params - The HTTP params object
    * @param {HttpContext['response']} ctx.response - The HTTP response object
-   * @param {HttpContext['auth']} ctx.auth - The HTTP auth object
+   * @param {HttpContext['userAuthenticated']} ctx.userAuthenticated - The authenticated user object
    * @returns {Promise<void>} - A promise that resolves with no return value
    */
-  public async delete({ params, response, auth }: HttpContext): Promise<void> {
-    const currentUserId: number = auth.user!.id
+  public async delete({ params, response, userAuthenticated }: HttpContext): Promise<void> {
+    console.log(`Attempting to delete team with ID: ${params.id}`)
+    const currentUserId: number = userAuthenticated!.id
     await TeamService.deleteTeam(Number(params.id), currentUserId)
     return response.noContent()
   }
@@ -171,11 +172,13 @@ export default class TeamsController {
    * @param {HttpContext['request']} ctx.request - The HTTP request object
    * @param {HttpContext['response']} ctx.response - The HTTP response object
    * @param {HttpContext['params']} ctx.params - The HTTP params object
+   * @param {HttpContext['userAuthenticated']} ctx.userAuthenticated - The authenticated user object
    * @returns {Promise<void>} - A promise that resolves with no return value
    */
-  public async addUserToTeam({ params, request, response }: HttpContext): Promise<void> {
+  public async addUserToTeam({ params, request, response, userAuthenticated }: HttpContext): Promise<void> {
     const { user_id, role }: AddUserToTeamPayload = request.only(['user_id', 'role'])
-    const team: Team = await TeamService.addUserToTeam(Number(params.team_id), user_id, role || 'member')
+    const currentUserId: number = userAuthenticated!.id
+    const team: Team = await TeamService.addUserToTeam(Number(params.team_id), user_id, currentUserId, role || 'member')
     return response.ok(team)
   }
 
@@ -197,10 +200,16 @@ export default class TeamsController {
    * @param {HttpContext} ctx - The HTTP context containing the request and response objects
    * @param {HttpContext['response']} ctx.response - The HTTP response object
    * @param {HttpContext['params']} ctx.params - The HTTP params object
+   * @param {HttpContext['userAuthenticated']} ctx.userAuthenticated - The authenticated user object
    * @returns {Promise<void>} - A promise that resolves with no return value
    */
-  public async removeUserFromTeam({ params, response }: HttpContext): Promise<void> {
-    const team: Team = await TeamService.removeUserFromTeam(Number(params.team_id), Number(params.user_id))
+  public async removeUserFromTeam({ params, response, userAuthenticated }: HttpContext): Promise<void> {
+    const currentUserId: number = userAuthenticated!.id
+    const team: Team = await TeamService.removeUserFromTeam(
+      Number(params.team_id),
+      Number(params.user_id),
+      currentUserId,
+    )
     return response.ok(team)
   }
 
@@ -224,11 +233,18 @@ export default class TeamsController {
    * @param {HttpContext['request']} ctx.request - The HTTP request object
    * @param {HttpContext['response']} ctx.response - The HTTP response object
    * @param {HttpContext['params']} ctx.params - The HTTP params object
+   * @param {HttpContext['userAuthenticated']} ctx.userAuthenticated - The authenticated user object
    * @returns {Promise<void>} - A promise that resolves with no return value
    */
-  public async updateUserRole({ params, request, response }: HttpContext): Promise<void> {
+  public async updateUserRole({ params, request, response, userAuthenticated }: HttpContext): Promise<void> {
     const { role }: UpdateUserRolePayload = request.only(['role'])
-    const team: Team = await TeamService.updateUserRole(Number(params.team_id), Number(params.user_id), role)
+    const currentUserId: number = userAuthenticated!.id
+    const team: Team = await TeamService.updateUserRole(
+      Number(params.team_id),
+      Number(params.user_id),
+      currentUserId,
+      role,
+    )
     return response.ok(team)
   }
 }
