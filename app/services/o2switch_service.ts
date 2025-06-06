@@ -312,9 +312,13 @@ export default class O2SwitchService {
         },
       )
 
+      console.log({
+        res: response.data.data,
+      })
+
       if (response.data.status === 1) {
         logger.info('Successfully retrieved MySQL databases.')
-        return response.data.result.data
+        return response.data.data
       } else {
         logger.warn('Failed to retrieve MySQL databases:' + response.data.errors || 'Unknown error')
         return []

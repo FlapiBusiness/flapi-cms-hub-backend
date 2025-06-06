@@ -1,6 +1,8 @@
 import Database from '#models/database'
 import logger from '@adonisjs/core/services/logger'
 import Project from '#models/project'
+import O2SwitchService from '#services/o2switch_service'
+import type { MySQLDatabase } from '#services/o2switch_service'
 
 /**
  * Service to handle database operations
@@ -28,7 +30,21 @@ export default class DatabaseService {
    */
   public static async getDatabases(): Promise<Database[]> {
     try {
-      return await Database.all()
+      const o2switchDatabases: MySQLDatabase[] = await O2SwitchService.listDatabases()
+      const databases: Database[] = await Database.all()
+      // join databases with the database table
+      for (const db of databases) {
+        const o2switchDatabase: MySQLDatabase | undefined = o2switchDatabases.find(
+          (o2Db: MySQLDatabase): boolean => o2Db.database === db.name,
+        )
+        // if o2switchDatabase existe merge with the database
+        if (o2switchDatabase) {
+          db['o2switch_database'] = o2switchDatabase.database
+        } else {
+          db.o2switch_database_name = ''
+        }
+      }
+      return databases
     } catch (error: any) {
       logger.error(error)
       throw error

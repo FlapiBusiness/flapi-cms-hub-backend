@@ -7,6 +7,7 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
       table.string('name').notNullable()
+      table.string('o2switch_database').notNullable()
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })
