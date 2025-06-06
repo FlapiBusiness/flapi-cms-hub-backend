@@ -37,12 +37,7 @@ export default class DatabaseService {
         const o2switchDatabase: MySQLDatabase | undefined = o2switchDatabases.find(
           (o2Db: MySQLDatabase): boolean => o2Db.database === db.name,
         )
-        // if o2switchDatabase existe merge with the database
-        if (o2switchDatabase) {
-          db['o2switch_database'] = o2switchDatabase.database
-        } else {
-          db.o2switch_database_name = ''
-        }
+        console.log(`O2Switch database: ${o2switchDatabase ? o2switchDatabase.database : 'not found'}`)
       }
       return databases
     } catch (error: any) {

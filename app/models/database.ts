@@ -14,8 +14,8 @@ export default class Database extends BaseModel {
   declare public name: string
 
   @column()
-  // @required @example('my_database')
-  declare public o2switch_database_name: string
+  // @example('my_database')
+  declare public o2switch_database_name: string | null
 
   @column.dateTime({ autoCreate: true })
   // @required @example('2022-01-01T00:00:00.000Z')

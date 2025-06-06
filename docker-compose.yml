@@ -73,6 +73,16 @@ services:
       - '8025:8025' # web ui
     networks:
       - app-network
+  gh-webhook:
+    build:
+      context: .
+      dockerfile: DockerfileGithubWebhook
+    env_file:
+      - .env
+    environment:
+      - GITHUB_PERSONAL_ACCESS_TOKEN=${GITHUB_PERSONAL_ACCESS_TOKEN}
+    networks:
+      - app-network
 
 networks:
   app-network:
