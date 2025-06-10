@@ -41,3 +41,5 @@ router.post('/project/:project_id/team/:team_id', [ProjectController, 'addTeamTo
  * Route pour la suppression d'une équipe d'un projet
  */
 router.delete('/project/:project_id/team/:team_id', [ProjectController, 'removeTeamFromProject'])
+
+router.post('/trigger-github-workflow', [ProjectController, 'triggerGithubWorkflow'])

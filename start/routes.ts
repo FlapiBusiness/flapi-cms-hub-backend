@@ -1,5 +1,4 @@
 import router from '@adonisjs/core/services/router'
-
 /**
  * Import des routes
  */
@@ -12,6 +11,7 @@ import './routes/database.js'
 import './routes/user.js'
 import './routes/team.js'
 import './routes/application_event_log.js'
+import './routes/github_webhook.js'
 
 /**
  * Cette route est utilisée pour tester le fonctionnement de base de l'application,

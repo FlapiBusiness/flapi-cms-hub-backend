@@ -2,400 +2,517 @@ import type { AxiosResponse } from 'axios'
 import axios from 'axios'
 import logger from '@adonisjs/core/services/logger'
 import env from '#start/env'
+import TimeService from '#services/time_service'
 
 /**
- * Représente un workflow GitHub.
- * @type {object} GitHubWorkflow
- * @property {number} id - L'identifiant du workflow.
- * @property {string} node_id - L'identifiant du nœud du workflow.
- * @property {string} name - Le nom du workflow.
- * @property {string} path - Le chemin du fichier YAML du workflow.
- * @property {string} state - L'état du workflow (actif ou désactivé).
- * @property {string} created_at - La date de création du workflow (format ISO 8601).
- * @property {string} updated_at - La date de mise à jour du workflow (format ISO 8601).
- * @property {string} url - L'URL de l'API du workflow.
- * @property {string} html_url - L'URL du workflow sur GitHub.
- * @property {string} badge_url - L'URL du badge du workflow.
+ * Represents a GitHub webhook configuration.
  */
-export type GitHubWorkflow = {
-  id: number
-  node_id: string
-  name: string
-  path: string
-  state: 'active' | 'disabled'
-  created_at: string // ISO 8601 date
-  updated_at: string // ISO 8601 date
+type GitHubWebhookConfig = {
   url: string
-  html_url: string
-  badge_url: string
+  content_type: string
+  insecure_ssl: string
+  secret?: string
 }
 
 /**
- * Représente la réponse de l'API GitHub pour la liste des workflows.
- * @type {object} GitHubWorkflowsResponse
- * @property {number} total_count - Le nombre total de workflows.
- * @property {GitHubWorkflow[]} workflows - La liste des workflows.
+ * Represents a GitHub webhook.
  */
-export type GitHubWorkflowsResponse = {
-  total_count: number
-  workflows: GitHubWorkflow[]
-}
-
-/**
- * Représente les options pour la création d'un repository GitHub depuis un template.
- * @type {object} GitHubRepoCreateOptions
- * @property {string} [description] - La description du nouveau repository.
- * @property {boolean} [private=false] - Indique si le repository doit être privé.
- */
-export type GitHubRepoCreateOptions = {
-  description?: string
-  private?: boolean
-}
-
-/**
- * Représente la requête pour créer un repository GitHub depuis un template.
- * @type {object} GitHubRepoCreateRequest
- * @property {string} owner - Le propriétaire du nouveau repository.
- * @property {string} name - Le nom du nouveau repository.
- * @property {string} [description] - La description du repository.
- * @property {boolean} [private=false] - Indique si le repository doit être privé.
- * @property {boolean} include_all_branches - Indique si toutes les branches doivent être incluses.
- */
-type GitHubRepoCreateRequest = {
-  owner: string
+type GitHubWebhook = {
+  id: number
   name: string
-  description?: string
-  private?: boolean
-  include_all_branches: boolean
+  active: boolean
+  events: string[]
+  config: GitHubWebhookConfig
 }
 
 /**
- * Représente l'en-tête d'authentification pour les requêtes à l'API GitHub.
- * @type {object} AuthHeader
- * @property {string} Authorization - Le jeton d'authentification.
- * @property {string} Accept - Le type de contenu accepté.
+ * Represents options for creating a GitHub repository from a template.
  */
-type AuthHeader = {
+type GitHubRepoCreateOptions = {
+  description?: string
+  private?: boolean
+}
+
+/**
+ * Represents a GitHub repository creation response.
+ */
+type GitHubRepoResponse = {
+  html_url: string
+  message?: string
+}
+
+/**
+ * Represents a GitHub file content response.
+ */
+type GitHubFileContentResponse = {
+  content: string
+  sha: string
+}
+
+/**
+ * Represents the payload for pushing a file to a GitHub repository.
+ */
+type GitHubPushFilePayload = {
+  message: string
+  content: string
+  branch: string
+  sha?: string
+}
+
+/**
+ * Represents the payload for triggering a GitHub workflow.
+ */
+type GitHubWorkflowDispatchPayload = {
+  ref: string
+  inputs: Record<string, string | number>
+}
+
+/**
+ * Represents the payload for creating a GitHub webhook.
+ */
+type GitHubWebhookCreatePayload = {
+  name: string
+  active: boolean
+  events: string[]
+  config: GitHubWebhookConfig
+}
+
+/**
+ * Represents the headers for GitHub API requests.
+ */
+type GitHubAuthHeaders = {
   Authorization: string
   Accept: string
+  'X-GitHub-Api-Version': string
 }
 
 /**
- * Service pour interagir avec l'API GitHub et créer des repositories à partir de templates.
+ * Service for interacting with the GitHub API to manage repositories, workflows, and webhooks.
  */
 export class GitHubService {
   private static readonly GITHUB_API_URL: string = 'https://api.github.com'
-  private static readonly TOKEN: string = env.get('GITHUB_PERSONAL_ACCESS_TOKEN')
-  private static readonly USERNAME: string = env.get('GITHUB_USERNAME_OR_ORGANIZATION')
-  private static readonly AUTH_HEADER: AuthHeader = {
-    Authorization: `token ${this.TOKEN}`,
+  private static readonly GITHUB_PERSONAL_ACCESS_TOKEN: string = env.get('GITHUB_PERSONAL_ACCESS_TOKEN', '')
+  private static readonly GITHUB_USERNAME_OR_ORGANIZATION: string = env.get('GITHUB_USERNAME_OR_ORGANIZATION', '')
+  private static readonly GITHUB_WEBHOOK_URL: string = env.get('GITHUB_WEBHOOK_URL', 'http://localhost:3556/webhook')
+  private static readonly AUTH_HEADER: GitHubAuthHeaders = {
+    Authorization: `Bearer ${this.GITHUB_PERSONAL_ACCESS_TOKEN}`,
     Accept: 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
   }
 
   /**
-   * Crée un repository à partir d'un template GitHub.
-   * @param {string} templateRepo - Le nom du repository template.
-   * @param {string} newRepoName - Le nom du nouveau repository.
-   * @param {GitHubRepoCreateOptions} [options] - Options supplémentaires pour le repository.
-   * @returns {Promise<boolean>} Indique si le repository a été créé avec succès.
+   * Validates environment variables required for GitHub API interactions.
+   * @throws {Error} If any required environment variable is missing.
+   */
+  static {
+    if (!this.GITHUB_PERSONAL_ACCESS_TOKEN) {
+      throw new Error('GITHUB_PERSONAL_ACCESS_TOKEN is not defined in .env')
+    }
+    if (!this.GITHUB_USERNAME_OR_ORGANIZATION) {
+      throw new Error('GITHUB_USERNAME_OR_ORGANIZATION is not defined in .env')
+    }
+  }
+
+  /**
+   * Creates a repository from a GitHub template.
+   * @param {string} newRepoName - The name of the new repository.
+   * @param {string} templateRepoName - The name of the template repository.
+   * @param {GitHubRepoCreateOptions} options - Optional settings for the repository (description, visibility).
+   * @returns The HTML URL of the created repository or null if it already exists.
    */
   public static async createRepositoryFromTemplate(
-    templateRepo: string,
     newRepoName: string,
+    templateRepoName: string,
     options: GitHubRepoCreateOptions = {},
-  ): Promise<boolean> {
-    const url: string = `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${templateRepo}/generate`
-    const data: GitHubRepoCreateRequest = {
-      owner: this.USERNAME,
+  ): Promise<string | null> {
+    const url: string = `${this.GITHUB_API_URL}/repos/${this.GITHUB_USERNAME_OR_ORGANIZATION}/${templateRepoName}/generate`
+    const data: {
+      owner: string
+      name: string
+      description: string
+      private: boolean
+      include_all_branches: boolean
+    } = {
+      owner: this.GITHUB_USERNAME_OR_ORGANIZATION,
       name: newRepoName,
-      description: options.description || '',
+      description: options.description || 'Repository created from a template',
       private: options.private || false,
-      include_all_branches: true,
+      include_all_branches: false,
     }
 
     try {
-      const response: AxiosResponse<any, any> = await axios.post(url, data, {
-        headers: this.AUTH_HEADER,
-      })
-
-      // Si la réponse est réussie, retourne true
-      return response.status === 201
+      // Check if the repository already exists
+      const repoUrl: string = `${this.GITHUB_API_URL}/repos/${this.GITHUB_USERNAME_OR_ORGANIZATION}/${newRepoName}`
+      await axios.get(repoUrl, { headers: this.AUTH_HEADER })
+      logger.info(`Repository '${newRepoName}' already exists.`)
+      return null
     } catch (error: any) {
-      logger.error('Erreur lors de la création du repository :' + error.response?.data || error.message)
+      if (error.response?.status === 404) {
+        try {
+          // Create the repository
+          const response: AxiosResponse<GitHubRepoResponse> = await axios.post(url, data, {
+            headers: this.AUTH_HEADER,
+          })
+          if (response.status === 201) {
+            logger.info(`Repository '${newRepoName}' created successfully.`)
+            return response.data.html_url
+          }
+          throw new Error(`Failed to create repository: ${response.data.message || 'Unknown error'}`)
+        } catch (creationError: any) {
+          logger.error(`Error creating repository: ${creationError.response?.data?.message || creationError.message}`)
+          console.log(creationError.response)
+          throw creationError
+        }
+      }
+      logger.error(`Error checking repository: ${error.response?.data?.message || error.message}`)
       throw error
     }
   }
 
   /**
-   * Récupère le contenu d'un fichier d'un repository GitHub à une branche donnée.
-   *
-   * @param {string} repo - Le nom du repository GitHub (ex: "flapi-nomclient-nomprojet-backend").
-   * @param {string} path - Le chemin complet du fichier à lire (ex: ".env").
-   * @returns {Promise<string>} Le contenu décodé en UTF-8 du fichier.
-   *
-   * @throws {Error} En cas d'erreur lors de la requête HTTP (fichier introuvable, branche absente, etc.).
+   * Retrieves the content of a workflow file from the template repository.
+   * @param {string} templateRepoName - Name of the template repository.
+   * @param {string} filePath - Path to the file in the template (e.g., '.github/workflows/init-update-files-and-push.yaml').
+   * @param {string} branch - Target branch (default: 'develop').
+   * @returns The decoded file content.
    */
-  public static async getFileContent(repo: string, path: string): Promise<string> {
-    const url: string = `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/contents/${path}?ref=develop`
-    const response: AxiosResponse<any, any> = await axios.get(url, {
-      headers: this.AUTH_HEADER,
-    })
-
-    return Buffer.from(response.data.content, 'base64').toString('utf-8')
+  public static async getWorkflowFileContent(
+    templateRepoName: string,
+    filePath: string,
+    branch: string = 'develop',
+  ): Promise<string> {
+    const url: string = `${this.GITHUB_API_URL}/repos/${this.GITHUB_USERNAME_OR_ORGANIZATION}/${templateRepoName}/contents/${filePath}?ref=${branch}`
+    try {
+      const response: AxiosResponse<GitHubFileContentResponse> = await axios.get(url, {
+        headers: this.AUTH_HEADER,
+      })
+      const content: string = Buffer.from(response.data.content, 'base64').toString('utf-8')
+      logger.info(`File '${filePath}' retrieved successfully from template.`)
+      return content
+    } catch (error: any) {
+      logger.error(`Error retrieving file '${filePath}': ${error.response?.data?.message || error.message}`)
+      throw error
+    }
   }
 
   /**
-   * Crée ou met à jour un fichier dans un repository GitHub.
-   *
-   * @param {Object} params - Paramètres pour la création du fichier.
-   * @param {string} params.repo - Nom du repository dans lequel créer le fichier.
-   * @param {string} params.path - Chemin complet du fichier à créer (ex : '.env').
-   * @param {string} params.content - Contenu brut du fichier (non encodé).
-   * @param {string} params.commitMessage - Message du commit associé à la création ou la modification du fichier.
-   *
-   * @returns {Promise<void>} Une promesse qui se résout une fois l’opération terminée.
-   *
-   * @throws {Error} En cas d’erreur lors de la requête à l’API GitHub.
+   * Checks if a file exists in a GitHub repository.
+   * @param repo - Repository name.
+   * @param filePath - File path (e.g., '.github/workflows/init-update-files-and-push.yaml').
+   * @param branch - Target branch (default: 'develop').
+   * @returns The file object with its SHA if it exists, or null if not found.
    */
-  public static async createFileInRepo({
+  public static async checkFileExists(
+    repo: string,
+    filePath: string,
+    branch: string = 'develop',
+  ): Promise<{ sha: string } | null> {
+    const url: string = `${this.GITHUB_API_URL}/repos/${this.GITHUB_USERNAME_OR_ORGANIZATION}/${repo}/contents/${filePath}?ref=${branch}`
+    try {
+      const response: AxiosResponse<GitHubFileContentResponse> = await axios.get(url, {
+        headers: this.AUTH_HEADER,
+      })
+      return { sha: response.data.sha }
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        logger.info(`File '${filePath}' not found in repository '${repo}'.`)
+        return null
+      }
+      logger.error(`Error checking file '${filePath}': ${error.response?.data?.message || error.message}`)
+      throw error
+    }
+  }
+
+  /**
+   * Pushes a file to a GitHub repository (create or update).
+   * @param params - Parameters for pushing the file.
+   * @param params.repo - Repository name.
+   * @param params.filePath - File path (e.g., '.github/workflows/init-update-files-and-push.yaml').
+   * @param params.content - File content (unencoded).
+   * @param params.commitMessage - Commit message.
+   * @param params.branch - Target branch (default: 'develop').
+   */
+  public static async pushFileToRepo({
     repo,
-    path,
+    filePath,
     content,
     commitMessage,
+    branch = 'develop',
   }: {
     repo: string
-    path: string
+    filePath: string
     content: string
     commitMessage: string
+    branch?: string
   }): Promise<void> {
-    const url: string = `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/contents/${path}`
-
-    const data: {
-      message: string
-      content: string
-      branch: string
-    } = {
+    const url: string = `${this.GITHUB_API_URL}/repos/${this.GITHUB_USERNAME_OR_ORGANIZATION}/${repo}/contents/${filePath}`
+    const fileExists: { sha: string } | null = await this.checkFileExists(repo, filePath, branch)
+    const data: GitHubPushFilePayload = {
       message: commitMessage,
       content: Buffer.from(content).toString('base64'),
-      branch: 'develop',
+      branch,
+      sha: fileExists?.sha,
     }
-
-    await axios.put(url, data, {
-      headers: this.AUTH_HEADER,
-    })
-  }
-
-  /**
-   * Crée une Pull Request (PR) vide pour forcer l'indexation des workflows GitHub.
-   * @param {string} repo - Nom du repository.
-   * @param {string} branch - Nom de la branche cible.
-   * @returns {Promise<void>}
-   */
-  public static async createDummyPullRequest(repo: string): Promise<void> {
-    const baseBranch: string = 'develop'
-    const tmpBranch: string = `workflow-index-${Date.now()}`
-    const triggerFilePath: string = `.github/workflows/.trigger-${Date.now()}.md`
-    const triggerContent: string = Buffer.from(`# Dummy PR to force indexing`).toString('base64')
 
     try {
-      // 1. Récupère le SHA de la branche de base
-      const refRes: AxiosResponse<any, any> = await axios.get(
-        `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/git/ref/heads/${baseBranch}`,
-        { headers: this.AUTH_HEADER },
-      )
-      const baseSha: AxiosResponse<any, any> = refRes.data.object.sha
-
-      // 2. Crée la branche temporaire
-      await axios.post(
-        `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/git/refs`,
-        {
-          ref: `refs/heads/${tmpBranch}`,
-          sha: baseSha,
-        },
-        { headers: this.AUTH_HEADER },
-      )
-
-      // 3. Ajoute un fichier dans la branche temporaire
-      await axios.put(
-        `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/contents/${triggerFilePath}`,
-        {
-          message: 'chore: trigger workflow indexing via PR',
-          content: triggerContent,
-          branch: tmpBranch,
-        },
-        { headers: this.AUTH_HEADER },
-      )
-
-      // 4. Crée la PR vers `develop`
-      await axios.post(
-        `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/pulls`,
-        {
-          title: 'chore: dummy PR to trigger GitHub Actions indexing',
-          head: tmpBranch,
-          base: baseBranch,
-          body: 'Cette PR existe uniquement pour forcer l’indexation des fichiers .yaml comme workflows.',
-        },
-        { headers: this.AUTH_HEADER },
-      )
-
-      logger.info(`Dummy PR créée de ${tmpBranch} → ${baseBranch} dans ${repo}`)
+      await axios.put(url, data, { headers: this.AUTH_HEADER })
+      logger.info(`File '${filePath}' ${fileExists ? 'updated' : 'created'} successfully in repository '${repo}'.`)
     } catch (error: any) {
-      logger.warn(`Échec création dummy PR dans ${repo}: ${error.response?.data?.message || error.message}`)
+      logger.error(`Error pushing file '${filePath}': ${error.response?.data?.message || error.message}`)
+      throw error
     }
   }
 
   /**
-   * Déclenche un workflow GitHub Actions.
-   * @param {string} repo - Nom du repository.
-   * @param {string} workflowPath - Nom du fichier YAML du workflow.
-   * @param {string} ref - Branche cible (ex: "main").
-   * @param {Record<string, string>} inputs - Les entrées du workflow.
-   * @returns {Promise<boolean>} Indique si le workflow a été déclenché avec succès.
+   * Triggers a GitHub Actions workflow via workflow_dispatch.
+   * @param repo - Repository name.
+   * @param workflowFileName - Workflow file name (e.g., 'init-update-files-and-push.yaml').
+   * @param ref - Target branch (default: 'develop').
+   * @param inputs - Optional inputs for the workflow.
+   * @returns True if the workflow was triggered successfully, false otherwise.
    */
   public static async triggerWorkflow(
     repo: string,
-    workflowPath: string,
-    ref: string,
-    inputs: Record<string, string | number>,
+    workflowFileName: string,
+    ref: string = 'develop',
+    inputs: Record<string, string | number> = {},
   ): Promise<boolean> {
-    // const workflow: GitHubWorkflow[] = await this.listWorkflows(repo)
-    // const workflowId: number | undefined = workflow.find((w: GitHubWorkflow): boolean => w.path === workflowPath)?.id
-    //
-    console.log({
-      inputs,
-    })
-    //
-    // if (!workflowId) {
-    //   const errorMessage: string = `Workflow "${workflowPath}" non trouvé dans le repository "${repo}".`
-    //   logger.error(errorMessage)
-    //   throw new Error(errorMessage)
-    // }
-
-    // Encoder le nom du fichier pour l'URL
-    const encodedWorkflowPath: string = encodeURIComponent(workflowPath) // très important
-    const url: string = `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/actions/workflows/${encodedWorkflowPath}/dispatches`
-    // const url: string = `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/actions/workflows/${workflowId}/dispatches`
+    const encodedWorkflowPath: string = encodeURIComponent(workflowFileName)
+    const url: string = `${this.GITHUB_API_URL}/repos/${this.GITHUB_USERNAME_OR_ORGANIZATION}/${repo}/actions/workflows/${encodedWorkflowPath}/dispatches`
+    const data: GitHubWorkflowDispatchPayload = { ref, inputs }
 
     try {
-      const response: AxiosResponse<any, any> = await axios.post(
-        url,
-        { ref, inputs },
+      const response: AxiosResponse<void> = await axios.post(url, data, { headers: this.AUTH_HEADER })
+      if (response.status === 204) {
+        logger.info(`Workflow '${workflowFileName}' triggered successfully in repository '${repo}'.`)
+        return true
+      }
+      return false
+    } catch (error: any) {
+      logger.error(`Error triggering workflow '${workflowFileName}': ${error.response?.data?.message || error.message}`)
+      throw error
+    }
+  }
+
+  /**
+   * Creates a webhook at the organization level to listen for workflow_run events.
+   * @param events - List of events to listen for (default: ['workflow_run']).
+   * @returns The ID of the created or existing webhook.
+   */
+  public static async createOrgWebhook(events: string[] = ['workflow_run']): Promise<number> {
+    const url: string = `${this.GITHUB_API_URL}/orgs/${this.GITHUB_USERNAME_OR_ORGANIZATION}/hooks`
+    const webhookConfig: GitHubWebhookConfig = {
+      url: this.GITHUB_WEBHOOK_URL,
+      content_type: 'json',
+      insecure_ssl: '0',
+    }
+    const data: GitHubWebhookCreatePayload = {
+      name: 'web',
+      active: true,
+      events,
+      config: webhookConfig,
+    }
+
+    try {
+      // Check if a webhook with the same URL already exists
+      const response: AxiosResponse<GitHubWebhook[]> = await axios.get(url, {
+        headers: this.AUTH_HEADER,
+      })
+      const existingWebhook: GitHubWebhook | undefined = response.data.find(
+        (hook: GitHubWebhook): boolean => hook.config.url === this.GITHUB_WEBHOOK_URL && hook.active,
+      )
+
+      if (existingWebhook) {
+        logger.info(`Existing webhook found with ID ${existingWebhook.id} for URL ${this.GITHUB_WEBHOOK_URL}.`)
+        return existingWebhook.id
+      }
+
+      // Create a new webhook
+      const createResponse: AxiosResponse<GitHubWebhook> = await axios.post(url, data, {
+        headers: this.AUTH_HEADER,
+      })
+      logger.info(`Webhook created successfully with ID ${createResponse.data.id}.`)
+      return createResponse.data.id
+    } catch (error: any) {
+      logger.error(`Error creating webhook: ${error.response?.data?.message || error.message}`)
+      throw error
+    }
+  }
+
+  /**
+   * Creates a new branch in a GitHub repository from an existing branch.
+   * @param repo - Repository name.
+   * @param newBranchName - Name of the new branch to create.
+   * @param sourceBranch - Name of the source branch (default: 'develop').
+   * @returns True if the branch was created successfully, false if it already exists.
+   */
+  public static async createBranch(
+    repo: string,
+    newBranchName: string,
+    sourceBranch: string = 'develop',
+  ): Promise<boolean> {
+    const getRefUrl: string = `${this.GITHUB_API_URL}/repos/${this.GITHUB_USERNAME_OR_ORGANIZATION}/${repo}/git/refs/heads/${sourceBranch}`
+    const createRefUrl: string = `${this.GITHUB_API_URL}/repos/${this.GITHUB_USERNAME_OR_ORGANIZATION}/${repo}/git/refs`
+
+    try {
+      // Check if the branch already exists
+      await axios.get(
+        `${this.GITHUB_API_URL}/repos/${this.GITHUB_USERNAME_OR_ORGANIZATION}/${repo}/git/refs/heads/${newBranchName}`,
         {
           headers: this.AUTH_HEADER,
         },
       )
-
-      return response.status === 204 // Succès si 204
+      logger.info(`Branch '${newBranchName}' already exists in repository '${repo}'.`)
+      return false
     } catch (error: any) {
-      console.error(error)
-      logger.error('Erreur lors du déclenchement du workflow :' + error.response?.data || error.message)
+      if (error.response?.status === 404) {
+        // Get the SHA of the source branch
+        const refResponse: AxiosResponse<{ object: { sha: string } }> = await axios.get(getRefUrl, {
+          headers: this.AUTH_HEADER,
+        })
+        const sha: string = refResponse.data.object.sha
+
+        // Create the new branch
+        const createResponse: AxiosResponse<void> = await axios.post(
+          createRefUrl,
+          {
+            ref: `refs/heads/${newBranchName}`,
+            sha,
+          },
+          { headers: this.AUTH_HEADER },
+        )
+
+        if (createResponse.status === 201) {
+          logger.info(`Branch '${newBranchName}' created successfully in repository '${repo}'.`)
+          return true
+        }
+        throw new Error(`Failed to create branch '${newBranchName}': Unknown error`)
+      }
+      logger.error(`Error checking branch '${newBranchName}': ${error.response?.data?.message || error.message}`)
       throw error
     }
   }
 
   /**
-   * Liste les workflows disponibles pour un repository.
-   * @param {string} repo - Nom du repository.
-   * @returns {Promise<GitHubWorkflowsResponse>}
+   * Orchestrates the creation of a repository, pushing a workflow file, triggering the workflow, and setting up a webhook.
+   * @param {string} newRepoName - Name of the new repository.
+   * @param {string} templateRepoName - Name of the template repository to use.
+   * @param {Record<string, string | number>} workflowInputs - Optional inputs for the workflow.
+   * @returns The HTML URL of the created repository or null if it already exists.
    */
-  public static async listWorkflows(repo: string): Promise<GitHubWorkflow[]> {
-    const url: string = `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/actions/workflows`
+  public static async createAndTriggerWorkflow(
+    newRepoName: string,
+    templateRepoName: string,
+    workflowInputs: Record<string, string | number> = {},
+  ): Promise<string | null> {
+    const workflowFilePath: string = '.github/workflows/init-update-files-and-push.yaml'
+    const workflowFileName: string = 'init-update-files-and-push.yaml'
+    const branch: string = 'develop'
 
+    // Step 1: Create the repository
+    const repoUrl: string | null = await this.createRepositoryFromTemplate(newRepoName, templateRepoName, {
+      private: false,
+    })
+    if (!repoUrl) {
+      return null // Repository already exists
+    }
+
+    // Step 2: Create main and staging branches
+    await TimeService.retry((): Promise<boolean> => this.createBranch(newRepoName, 'main', branch), 5)
+    await TimeService.retry((): Promise<boolean> => this.createBranch(newRepoName, 'staging', branch), 5)
+
+    // Step 3: Configure the webhook at the organization level
+    if (process.env.NODE_ENV === 'production') {
+      try {
+        await this.createOrgWebhook(['workflow_run'])
+      } catch (error: any) {
+        logger.error(`Failed to create webhook: ${error.message}`)
+        throw error
+      }
+    }
+
+    // Step 4: Retrieve the workflow file from the template
+    let workflowContent: string
     try {
-      const response: AxiosResponse<GitHubWorkflowsResponse, any> = await axios.get(url, {
-        headers: this.AUTH_HEADER,
+      workflowContent = await TimeService.retry(
+        (): Promise<string> => this.getWorkflowFileContent(templateRepoName, workflowFilePath, branch),
+        5,
+      )
+    } catch (error: any) {
+      logger.error(`Final failure retrieving workflow file: ${error.message}`)
+      throw error
+    }
+
+    // Step 5: Push the workflow file to the new repository
+    try {
+      await this.pushFileToRepo({
+        repo: newRepoName,
+        filePath: workflowFilePath,
+        content: workflowContent,
+        commitMessage: 'Add workflow file from template',
+        branch,
       })
-
-      logger.info('Workflows disponibles :' + JSON.stringify(response.data))
-      return response.data.workflows
     } catch (error: any) {
-      logger.error('Erreur lors de la récupération des workflows :' + error.response?.data || error.message)
+      logger.error(`Failed to push workflow file: ${error.message}`)
       throw error
     }
-  }
-
-  /**
-   * Déclenche un commit pour forcer l'indexation des workflows GitHub.
-   * @param {string} repo - Nom du repository.
-   * @returns {Promise<void>}
-   */
-  public static async triggerWorkflowIndexingCommit(repo: string): Promise<void> {
-    const randomNumber: number = Math.floor(Math.random() * 1000000)
-    const branchName: string = `workflow-index-${randomNumber}`
-    const triggerFilePath: string = `.github/workflows/.trigger-indexing-${randomNumber}.md`
-    const content: string = Buffer.from(`# Trigger GitHub workflows indexing\n`).toString('base64')
 
     try {
-      // Crée la branche depuis develop
-      const baseBranch: string = 'develop'
-      const branchRes: AxiosResponse<any, any> = await axios.get(
-        `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/git/ref/heads/${baseBranch}`,
-        { headers: this.AUTH_HEADER },
+      await TimeService.retry(
+        (): Promise<void> =>
+          this.pushFileToRepo({
+            repo: newRepoName,
+            filePath: workflowFilePath,
+            content: workflowContent,
+            commitMessage: 'Add workflow file from template',
+            branch,
+          }),
+        5,
       )
-      const sha: string = branchRes.data.object.sha
-
-      await axios.post(
-        `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/git/refs`,
-        {
-          ref: `refs/heads/${branchName}`,
-          sha,
-        },
-        { headers: this.AUTH_HEADER },
-      )
-
-      // Push du commit sur la nouvelle branche
-      await axios.put(
-        `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/contents/${triggerFilePath}`,
-        {
-          message: 'chore: trigger workflow indexing',
-          content,
-          branch: branchName,
-        },
-        { headers: this.AUTH_HEADER },
-      )
-
-      logger.info(`Workflow indexing commit pushed to ${repo} on branch ${branchName}`)
     } catch (error: any) {
-      console.error(error)
-      logger.error('Erreur lors du commit trigger workflows :' + error.response?.data || error.message)
+      logger.error(`Failed to push workflow file: ${error.message}`)
+      throw error
+    }
+
+    // Step 6: Trigger the workflow
+    try {
+      await TimeService.retry(
+        (): Promise<boolean> => this.triggerWorkflow(newRepoName, workflowFileName, branch, workflowInputs),
+        5,
+      )
+      return repoUrl
+    } catch (error: any) {
+      logger.error(`Failed to trigger workflow: ${error.message}`)
       throw error
     }
   }
 
   /**
-   * Protège les branches "main", "staging" et "develop" avec les règles demandées.
-   * @param {string} repo - Le nom du repository.
-   * @returns {Promise<void>} Une promesse qui se résout après la protection des branches.
+   * Protects the branches "Main", "Staging" and "Develop" with the requested rules.
+   * @param {string} repo - The name of Repository.
+   * @returns {Promise<void>} A promise that is resolved after the protection of the branches.
    */
   public static async protectBranches(repo: string): Promise<void> {
     const branches: string[] = ['main', 'staging', 'develop']
     const protectionRules: any = {
       required_pull_request_reviews: {
-        required_approving_review_count: 1, // Requiert au moins 1 approbation pour le merge
+        required_approving_review_count: 1, // Requires at least 1 approval for merge
       },
-      lock_branch: true, // Rend la branche en lecture seule
+      lock_branch: true, // Make the branch in reading alone
     }
 
     try {
       for (const branch of branches) {
-        const url: string = `${this.GITHUB_API_URL}/repos/${this.USERNAME}/${repo}/branches/${branch}/protection`
+        const url: string = `${this.GITHUB_API_URL}/repos/${this.GITHUB_USERNAME_OR_ORGANIZATION}/${repo}/branches/${branch}/protection`
         await axios.put(url, protectionRules, {
           headers: this.AUTH_HEADER,
         })
-        logger.info(`Protection appliquée avec succès sur la branche "${branch}" du repository "${repo}".`)
+        logger.info(`Successfully applied protection on the branch "${branch}" of repository "${repo}".`)
       }
     } catch (error: any) {
-      logger.error('Erreur lors de la protection des branches :' + error.response?.data || error.message)
+      console.log(error.response)
+      logger.error('Error when protecting branches:' + error.response?.data || error.message)
       throw error
     }
   }
-}
-
-/**
- * Attend un certain nombre de millisecondes avant de résoudre la promesse.
- * @param {number} ms - Le nombre de millisecondes à attendre.
- * @returns {Promise<void>} Une promesse résolue après le délai.
- */
-export const delay: (ms: number) => Promise<void> = (ms: number): Promise<void> => {
-  return new Promise((resolve: any) => setTimeout(resolve, ms))
 }
