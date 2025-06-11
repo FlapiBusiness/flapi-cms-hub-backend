@@ -95,6 +95,6 @@ export default class GithubProjectRepositoryService {
       await this.getAllGithubProjectRepositoriesByProjectId(projectId)
 
     // Check if any repository has been deployed
-    return projectGithubRepositories.some((repository: GithubProjectRepository): boolean => repository.deployed)
+    return projectGithubRepositories.every((repository: GithubProjectRepository): boolean => repository.deployed)
   }
 }

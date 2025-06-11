@@ -189,7 +189,7 @@ export default class ClientService {
           project_id: projectId,
           repo_name: repo.name,
           repo_url: repoUrl,
-          type: repo.template === 'flapi-starterkit-frontend' ? 'frontend' : 'backend',
+          type: repo.name.endsWith('-frontend') ? 'frontend' : 'backend',
           deployed: false,
         })
       }
