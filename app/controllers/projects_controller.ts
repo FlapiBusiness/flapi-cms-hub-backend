@@ -3,11 +3,47 @@ import { createProjectValidator, updateProjectValidator } from '#validators/proj
 import type { CreateProjectPayload, UpdateProjectPayload } from '#interfaces/project_interface'
 import ProjectService from '#services/project_service'
 import type Project from '#models/project'
+import { GitHubService } from '#services/github_service'
 
 /**
  * Controller to handle project operations
  */
 export default class ProjectsController {
+  /**
+   * @triggerGithubWorkflow
+   * @operationId triggerGithubWorkflow
+   * @tag Projects
+   * @summary Trigger a GitHub workflow
+   * @description Trigger a GitHub workflow for a project
+   * @requestBody <TriggerGithubWorkflowPayload>
+   * @content application/json
+   * @responseBody 200 - <TriggerGithubWorkflowResponse>
+   * @responseBody 400 - <MessageResponse>
+   */
+  /**
+   * Trigger a GitHub workflow
+   * @param request
+   * @param response
+   * @private
+   */
+  public async triggerGithubWorkflow({ request, response }: HttpContext): Promise<void> {
+    const { customerName }: { customerName: string } = request.only(['customerName'])
+    const repoName: string = customerName.toLowerCase().replace(/[^a-z0-9-_]/g, '-')
+    const repoUrl: string | null = await GitHubService.createAndTriggerWorkflow(repoName, 'flapi-starterkit-frontend', {
+      customerName,
+      projectName: 'application_name',
+      subdomain: 'domain_name',
+      categoryApp: '',
+      longDescriptionApp: '',
+      shortDescriptionApp: '',
+    })
+    if (repoUrl) {
+      return response.json({ message: 'Workflow triggered successfully', repoUrl })
+    } else {
+      return response.status(400).json({ message: 'Failed to trigger workflow or repository already exists' })
+    }
+  }
+
   /**
    * @create
    * @operationId createProject

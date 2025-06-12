@@ -74,13 +74,23 @@ services:
     networks:
       - app-network
   gh-webhook:
+    restart: unless-stopped
+    healthcheck:
+      test: curl --fail http://host.docker.internal:3556/webhook || exit 1
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 5s
+    depends_on:
+      - adonis
     build:
       context: .
       dockerfile: DockerfileGithubWebhook
     env_file:
       - .env
     environment:
-      - GITHUB_PERSONAL_ACCESS_TOKEN=${GITHUB_PERSONAL_ACCESS_TOKEN}
+      - GITHUB_WEBHOOK_ACCESS_TOKEN=${GITHUB_WEBHOOK_ACCESS_TOKEN}
+      - GITHUB_USERNAME_OR_ORGANIZATION=${GITHUB_USERNAME_OR_ORGANIZATION}
     networks:
       - app-network
 

@@ -2,14 +2,33 @@ import AWSDomainService from '#services/aws_domain_service'
 import env from '#start/env'
 import BadRequestException from '#exceptions/bad_request_exception'
 import O2SwitchService from '#services/o2switch_service'
-import { delay, GitHubService } from '#services/github_service'
-import type { GitHubWorkflow } from '#services/github_service'
+import { GitHubService } from '#services/github_service'
 import InternalServerErrorException from '#exceptions/internal_server_error_exception'
 import { ProjectSetupStep } from '#enums/project_setup_step'
 import ProjectSetupService from '#services/project_setup_service'
 import type { CreateProjectSetupPayload } from '#interfaces/project_setup_interface'
 import { ProjectSetupStatus } from '#enums/project_setup_status'
 import type { CreateProjectPayload } from '#interfaces/project_interface'
+import TimeService from '#services/time_service'
+import GithubProjectRepositoryService from '#services/github_project_repository_service'
+
+/**
+ * Type representing the inputs for the GitHub workflow dispatch event.
+ * @property {string} customerName - The name of the customer.
+ * @property {string} projectName - The name of the project.
+ * @property {string} subdomain - The subdomain for the project.
+ * @property {string} categoryApp - The category of the application.
+ * @property {string} longDescriptionApp - The long description of the application.
+ * @property {string} shortDescriptionApp - The short description of the application.
+ */
+type WorkflowDispatchInputs = {
+  customerName: string
+  projectName: string
+  subdomain: string
+  categoryApp: string
+  longDescriptionApp: string
+  shortDescriptionApp: string
+}
 
 /**
  * Service to manage the project setup.
@@ -26,8 +45,6 @@ export default class ClientService {
    * @returns {Promise<void>} A promise that resolves when the application is created.
    */
   public static async createNewApplication(projectId: number, payload: CreateProjectPayload): Promise<void> {
-    // Step 0: await 5 seconds to await frontend redirection
-    await delay(5000)
     await this.updateProjectSetupStep(projectId, ProjectSetupStep.SETUP_STARTED)
     // Step 1: Check if the subdomains already exist
     await this.checkSubdomainsAlreadyExist(projectId, payload.domain_name)
@@ -36,15 +53,7 @@ export default class ClientService {
     // Step 3: Create databases on O2SWitch
     await this.createDatabases(projectId, payload)
     // Step 4: Create GitHub repositories
-    await this.createGitHubRepositories(projectId, payload)
-    // Step 5: Trigger workflows
-    const triggerGitHubWorkflowsStartTime: number = Date.now()
-    await this.triggerGitHubWorkflows(projectId, payload)
-    const triggerGitHubWorkflowsEndTime: number = Date.now()
-    const triggerGitHubWorkflowsDuration: number = triggerGitHubWorkflowsEndTime - triggerGitHubWorkflowsStartTime
-    console.log({
-      TRIGGER_GITHUB_WORKFLOWS_DURATION: (triggerGitHubWorkflowsDuration / 1000).toFixed(2),
-    })
+    await this.createGitHubRepositoriesAndTriggerWorkflow(projectId, payload)
     // Step 6: Update the project setup step to complete
     await this.updateProjectSetupStep(projectId, ProjectSetupStep.SETUP_DONE, ProjectSetupStatus.COMPLETED)
   }
@@ -149,111 +158,55 @@ export default class ClientService {
    * @param {CreateProjectPayload} payload - The payload containing repository details.
    * @returns {Promise<void>} A promise that resolves when the repositories are created.
    */
-  private static async createGitHubRepositories(projectId: number, payload: CreateProjectPayload): Promise<void> {
+  private static async createGitHubRepositoriesAndTriggerWorkflow(
+    projectId: number,
+    payload: CreateProjectPayload,
+  ): Promise<void> {
     try {
+      const workflowInputs: WorkflowDispatchInputs = {
+        customerName: payload.customer_name,
+        projectName: payload.application_name,
+        subdomain: payload.domain_name,
+        categoryApp: '',
+        longDescriptionApp: '',
+        shortDescriptionApp: '',
+      }
+
       await this.updateProjectSetupStep(projectId, ProjectSetupStep.CREATE_REPOSITORIES)
-      const newDescriptionRepo: string = `Application ${this.sanitize(payload.application_name)} for ${this.sanitize(payload.customer_name)}`
-      const newPrivateRepo: boolean = false
 
       for (const repo of this.getGitHubRepositories(payload)) {
-        const isCreated: boolean = await GitHubService.createRepositoryFromTemplate(repo.template, repo.name, {
-          description: newDescriptionRepo,
-          private: newPrivateRepo,
-        })
-        if (!isCreated) {
-          throw new InternalServerErrorException(`Impossible de créer le repository "${repo.name}".`)
+        const repoUrl: string | null = await GitHubService.createAndTriggerWorkflow(
+          repo.name,
+          repo.template,
+          workflowInputs,
+        )
+
+        if (!repoUrl) {
+          throw new InternalServerErrorException(`Impossible to create GitHub repository "${repo.name}".`)
         }
 
-        // Wait 40 seconds to let GitHub finalize the creation of repositories
-        await delay(40000)
-
-        // await GitHubService.triggerWorkflowIndexingCommit(repo.name)
-        await GitHubService.createFileInRepo({
-          repo: repo.name,
-          path: `.github/workflows/.trigger-${Date.now()}.md`,
-          content: `# Just a dummy trigger to force workflow indexing`,
-          commitMessage: 'chore: trigger workflow indexing',
+        await GithubProjectRepositoryService.createGithubProjectRepository({
+          project_id: projectId,
+          repo_name: repo.name,
+          repo_url: repoUrl,
+          type: repo.name.endsWith('-frontend') ? 'frontend' : 'backend',
+          deployed: false,
         })
-
-        await GitHubService.createDummyPullRequest(repo.name)
       }
 
       await this.updateProjectSetupStep(projectId, ProjectSetupStep.CREATE_REPOSITORIES, ProjectSetupStatus.COMPLETED)
+
+      // sleep for 5 seconds to ensure repositories are created
+      await TimeService.sleep(5000)
+      await this.updateProjectSetupStep(projectId, ProjectSetupStep.DEPLOYMENT, ProjectSetupStatus.IN_PROGRESS)
     } catch (error: any) {
-      const errorMessage: string = error.message || 'Erreur lors de la création des repositories GitHub'
+      const errorMessage: string = error.message || 'Error when creating GitHub repositories'
       await this.updateProjectSetupStep(
         projectId,
         ProjectSetupStep.CREATE_REPOSITORIES,
         ProjectSetupStatus.FAILED,
         errorMessage,
       )
-      throw new InternalServerErrorException(errorMessage)
-    }
-  }
-
-  /**
-   * Trigger GitHub workflows for the specified repositories.
-   * @param {number} projectId - The ID of the project.
-   * @param {CreateProjectPayload} payload - The payload containing workflow details.
-   * @returns {Promise<void>} A promise that resolves when the workflows are triggered.
-   */
-  private static async triggerGitHubWorkflows(projectId: number, payload: CreateProjectPayload): Promise<void> {
-    try {
-      // Wait 20 seconds to let GitHub finalize the creation of repositories
-      await delay(20000)
-
-      await this.updateProjectSetupStep(projectId, ProjectSetupStep.DEPLOYMENT)
-      const githubRepositories: { template: string; name: string }[] = this.getGitHubRepositories(payload)
-
-      const workflowPath: string = '.github/workflows/init-update-files-and-push.yaml'
-      const workflowBranch: string = 'develop'
-      const workflowInputs: Record<string, string> = {
-        customerName: this.sanitize(payload.customer_name),
-        projectName: this.sanitize(payload.application_name),
-        subdomain: this.sanitize(AWSDomainService.extractSubdomain(payload.domain_name)),
-        categoryApp: 'default-category',
-        longDescriptionApp: 'Longue description de l’application',
-        shortDescriptionApp: 'Description courte',
-      }
-
-      for (const repo of githubRepositories) {
-        // 🧠 Retry: attendre que tous les workflows soient bien listés
-        let retries: number = 15
-        let workflows: GitHubWorkflow[] = []
-
-        while (retries-- > 0) {
-          workflows = await GitHubService.listWorkflows(repo.name)
-          // verify if found init-update-files-and-push.yaml
-          const workflowFound: boolean = workflows.some((workflow: GitHubWorkflow): boolean => {
-            return workflow.path === workflowPath
-          })
-          if (workflowFound) break
-          console.log(`[${repo.name}] Workflows trouvés: ${workflows.length}. Nouvelle tentative dans 2s...`)
-          await delay(2000)
-        }
-
-        console.log('NUMBER_OF_WORKFLOWS:', workflows.length)
-
-        const workflowTriggered: boolean = await GitHubService.triggerWorkflow(
-          repo.name,
-          workflowPath,
-          workflowBranch,
-          workflowInputs,
-        )
-        if (!workflowTriggered) {
-          console.error(`Erreur lors du déclenchement du workflow pour le repository "${repo.name}".`)
-          throw new InternalServerErrorException(
-            `Le déclenchement du workflow pour le repository "${repo.name}" a échoué.`,
-          )
-        }
-      }
-      // Wait 4 minutes to let GitHub finalize the deployment
-      await delay(240000)
-      await this.updateProjectSetupStep(projectId, ProjectSetupStep.DEPLOYMENT, ProjectSetupStatus.COMPLETED)
-    } catch (error: any) {
-      const errorMessage: string = error.message || 'Erreur lors du déclenchement des workflows'
-      console.error('Error triggering GitHub workflows:', JSON.stringify(errorMessage, null, 2))
-      await this.updateProjectSetupStep(projectId, ProjectSetupStep.DEPLOYMENT, ProjectSetupStatus.FAILED, errorMessage)
       throw new InternalServerErrorException(errorMessage)
     }
   }
@@ -298,7 +251,7 @@ export default class ClientService {
    * @param {string} [message] - An optional message for the setup step.
    * @returns {Promise<void>} A promise that resolves when the update is complete.
    */
-  private static async updateProjectSetupStep(
+  public static async updateProjectSetupStep(
     projectId: number,
     step: ProjectSetupStep,
     status: ProjectSetupStatus = ProjectSetupStatus.IN_PROGRESS,
