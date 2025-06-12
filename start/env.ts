@@ -57,4 +57,7 @@ export default await Env.create(new URL('../', import.meta.url), {
   KEYCLOAK_REALM: Env.schema.string(),
   KEYCLOAK_CLIENT_ID: Env.schema.string(),
   KEYCLOAK_CLIENT_SECRET: Env.schema.string(),
+  NATS_SERVER: Env.schema.string(),
+  NATS_NKEY_PRIVATE_KEY: Env.schema.string(),
+  NATS_SUBSCRIPTION_QUEUE: Env.schema.string(),
 })
