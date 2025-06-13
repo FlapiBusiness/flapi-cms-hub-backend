@@ -29,13 +29,13 @@ export default class ProjectsController {
   public async triggerGithubWorkflow({ request, response }: HttpContext): Promise<void> {
     const { customerName }: { customerName: string } = request.only(['customerName'])
     const repoName: string = customerName.toLowerCase().replace(/[^a-z0-9-_]/g, '-')
-    const repoUrl: string | null = await GitHubService.createAndTriggerWorkflow(repoName, 'flapi-starterkit-frontend', {
+    const repoUrl: string | null = await GitHubService.createAndTriggerWorkflow(repoName, 'flapi-cms-client-frontend', {
       customerName,
       projectName: 'application_name',
       subdomain: 'domain_name',
-      categoryApp: '',
-      longDescriptionApp: '',
-      shortDescriptionApp: '',
+      categoryApp: 'categoryApp',
+      longDescriptionApp: 'longDescriptionApp',
+      shortDescriptionApp: 'shortDescriptionApp',
     })
     if (repoUrl) {
       return response.json({ message: 'Workflow triggered successfully', repoUrl })

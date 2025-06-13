@@ -54,8 +54,6 @@ export default class ClientService {
     await this.createDatabases(projectId, payload)
     // Step 4: Create GitHub repositories
     await this.createGitHubRepositoriesAndTriggerWorkflow(projectId, payload)
-    // Step 6: Update the project setup step to complete
-    await this.updateProjectSetupStep(projectId, ProjectSetupStep.SETUP_DONE, ProjectSetupStatus.COMPLETED)
   }
 
   /**
@@ -167,9 +165,9 @@ export default class ClientService {
         customerName: payload.customer_name,
         projectName: payload.application_name,
         subdomain: payload.domain_name,
-        categoryApp: '',
-        longDescriptionApp: '',
-        shortDescriptionApp: '',
+        categoryApp: 'categoryApp',
+        longDescriptionApp: 'longDescriptionApp',
+        shortDescriptionApp: 'shortDescriptionApp',
       }
 
       await this.updateProjectSetupStep(projectId, ProjectSetupStep.CREATE_REPOSITORIES)
@@ -220,8 +218,8 @@ export default class ClientService {
     const newRepoNameFrontend: string = `flapi-${this.sanitize(payload.customer_name)}-${this.sanitize(payload.application_name)}-frontend`
     const newRepoNameBackend: string = `flapi-${this.sanitize(payload.customer_name)}-${this.sanitize(payload.application_name)}-backend`
 
-    const templateRepoFrontend: string = 'flapi-starterkit-frontend'
-    const templateRepoBackend: string = 'flapi-starterkit-backend'
+    const templateRepoFrontend: string = 'flapi-cms-client-frontend'
+    const templateRepoBackend: string = 'flapi-cms-client-backend'
 
     return [
       { template: templateRepoFrontend, name: newRepoNameFrontend },
