@@ -34,16 +34,17 @@ services:
       - app-network
 
   nats:
-    image: nats:latest
     container_name: nats
-    ports:
-      - '4222:4222' # Port NATS classique (TCP)
-      - '8222:8222' # Port Monitoring NATS (HTTP)
-      - '9222:9222' # Port Monitoring NATS (WebSocket)
-    volumes:
-      - ./nats-server.conf:/etc/nats/nats-server.conf
-    command: ['-c', '/etc/nats/nats-server.conf']
+    image: nats:latest
     restart: always
+    ports:
+      - '4222:4222' # NATS client connections
+      - '4223:4223' # WebSocket connections
+      - '8222:8222' # HTTP monitoring
+    volumes:
+      - ./nats/nats_config.json:/etc/nats/nats_config.json # Mount a configuration file
+      - nats_data:/data/nats # Mount a volume for JetStream data storage
+    command: -c /etc/nats/nats_config.json
     networks:
       - app-network
 
@@ -73,6 +74,7 @@ services:
       - '8025:8025' # web ui
     networks:
       - app-network
+
   gh-webhook:
     restart: unless-stopped
     healthcheck:
@@ -101,3 +103,4 @@ volumes:
   database_data:
   app:
   node_modules:
+  nats_data:
