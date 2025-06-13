@@ -60,7 +60,7 @@ export default class GithubWebhookService {
     const { id, name, status, conclusion, head_branch, event, run_attempt } = workflowRun
 
     // Journalist from workflow information
-    logger.info('Webhook reçu pour workflow_run', {
+    console.log('Webhook received for workflow_run', {
       id,
       name,
       status,
@@ -73,7 +73,7 @@ export default class GithubWebhookService {
 
     // Check the state of the workflow
     if (status !== 'completed') {
-      logger.debug(`Workflow '${name}' is in ${status}`, {
+      logger.debug(`[${workflowRun.repository.name}] Workflow '${name}' is in ${status}`, {
         id,
         branch: head_branch,
       })
@@ -87,10 +87,13 @@ export default class GithubWebhookService {
     // Manage the conclusions for finished workflows
     switch (conclusion) {
       case 'success':
-        logger.info(`Workflow '${name}' successfully completed`, { id, branch: head_branch })
+        logger.info(`[${workflowRun.repository.name}] Workflow '${name}' successfully completed`, {
+          id,
+          branch: head_branch,
+        })
         break
       case 'failure':
-        logger.error(`Workflow '${name}' failed`, {
+        logger.error(`[${workflowRun.repository.name}] Workflow '${name}' failed`, {
           id,
           branch: head_branch,
           attempt: run_attempt,
@@ -98,7 +101,7 @@ export default class GithubWebhookService {
         break
       case 'cancelled':
       case 'timed_out':
-        logger.warn(`Workflow '${name}' was interrupted`, {
+        logger.warn(`[${workflowRun.repository.name}] Workflow '${name}' was interrupted`, {
           id,
           branch: head_branch,
           conclusion,
@@ -107,13 +110,15 @@ export default class GithubWebhookService {
         break
       case 'neutral':
       case 'skipped':
-        logger.info(`Workflow '${name}' completed with conclusion: ${conclusion}`, {
+        logger.info(`[${workflowRun.repository.name}] Workflow '${name}' completed with conclusion: ${conclusion}`, {
           id,
           branch: head_branch,
         })
         break
       default:
-        logger.warn(`Unexpected conclusion for workflow '${name}': ${conclusion}`, { id })
+        logger.warn(`[${workflowRun.repository.name}] Unexpected conclusion for workflow '${name}': ${conclusion}`, {
+          id,
+        })
     }
 
     // Update the state of the project for specific workflows
@@ -136,6 +141,8 @@ export default class GithubWebhookService {
     const deploymentWorkflows: string[] = [
       'init-tests_build_deploy_cluster_development-web',
       'init-tests_build_deploy_cluster_staging-web',
+      'tests_build_deploy_cluster_development-remote',
+      'tests_build_deploy_cluster_staging',
     ]
 
     if (!deploymentWorkflows.includes(name)) {
@@ -155,12 +162,15 @@ export default class GithubWebhookService {
 
     if (status === 'completed' && conclusion === 'success') {
       try {
+        logger.info(`The repository ${workflowRun.repository.name} has been successfully deployed`)
         await GithubProjectRepositoryService.updateDeployedStatusByRepoName(workflowRun.repository.name, true)
       } catch (error: any) {
         logger.error(`Error updating deployment status for project ${projectId}`, {
           repository: workflowRun.repository.name,
           error: error.message,
         })
+        console.error('Error updating deployment status for project', error)
+        throw error
       }
     }
 
@@ -175,6 +185,8 @@ export default class GithubWebhookService {
           ProjectSetupStatus.COMPLETED,
           'Le projet a été déployé avec succès',
         )
+        // Update the project setup step to complete
+        await ClientService.updateProjectSetupStep(projectId, ProjectSetupStep.SETUP_DONE, ProjectSetupStatus.COMPLETED)
         logger.info(`Project ${projectId} has been successfully deployed`, {
           repository: workflowRun.repository.name,
         })

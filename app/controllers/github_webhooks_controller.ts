@@ -13,7 +13,7 @@ export default class GithubWebhooksController {
    * @param ctx - The HTTP context containing the request and the answer.
    * @returns {GitHubWebhookResponse} - The response indicating the status of the webhook processing.
    */
-  public handleWebhook({ request, response }: HttpContext): GitHubWebhookResponse {
+  public async handleWebhook({ request, response }: HttpContext): Promise<GitHubWebhookResponse> {
     const webhook: { workflow_run?: GitHubWorkflowRun } = request.body()
 
     // Validate the presence of workflow_run in the payload
@@ -27,7 +27,7 @@ export default class GithubWebhooksController {
     }
 
     try {
-      return GithubWebhookService.processWorkflowRun(webhook.workflow_run)
+      return await GithubWebhookService.processWorkflowRun(webhook.workflow_run)
     } catch (error: any) {
       logger.error('Error when treating the webhook', {
         message: error.message,

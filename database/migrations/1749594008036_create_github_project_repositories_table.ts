@@ -5,6 +5,7 @@ export default class extends BaseSchema {
 
   async up(): Promise<void> {
     this.schema.createTable(this.tableName, (table): void => {
+      table.increments('id')
       table.integer('project_id').unsigned().notNullable().references('id').inTable('projects').onDelete('CASCADE')
       table.string('repo_name').notNullable()
       table.string('repo_url').notNullable()
