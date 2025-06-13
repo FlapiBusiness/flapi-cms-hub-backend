@@ -1,0 +1,27 @@
+{
+  "host": "0.0.0.0",
+  "port": 4222,
+  "debug": true,
+  "trace": true,
+  "logtime": true,
+  "jetstream": {
+    "max_mem": 2147483648,
+    "max_file": 536870912000,
+    "store_dir": "/data/nats"
+  },
+  "accounts": {
+    "admin": {
+      "jetstream": "enabled",
+      "users": [
+        {
+          "nkey": "UBYXUQX2MZNGMKZR5XGKOMFRNQGIHUSS43BDM7ZXUKGZ355U75LAHQQZ"
+        }
+      ]
+    }
+  },
+  "websocket": {
+    "port": 4223,
+    "no_tls": true
+  },
+  "http_port": 8222
+}
