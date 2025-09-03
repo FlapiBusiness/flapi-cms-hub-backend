@@ -36,14 +36,14 @@ router.delete('/teams/:id', [TeamController, 'delete']).use(middleware.auth())
 /**
  * Route to add a user to a team
  */
-router.post('/teams/:team_id/users', [TeamController, 'addUserToTeam'])
+router.post('/teams/:team_id/users', [TeamController, 'addUserToTeam']).use(middleware.auth())
 
 /**
  * Route to remove a user from a team
  */
-router.delete('/teams/:team_id/users/:user_id', [TeamController, 'removeUserFromTeam'])
+router.delete('/teams/:team_id/users/:user_id', [TeamController, 'removeUserFromTeam']).use(middleware.auth())
 
 /**
  * Route to update a user's role in a team
  */
-router.put('/teams/:team_id/users/:user_id/role', [TeamController, 'updateUserRole'])
+router.put('/teams/:team_id/users/:user_id/role', [TeamController, 'updateUserRole']).use(middleware.auth())
